@@ -1,5 +1,5 @@
 // Fuji addresses. Update to Avalanche (add chainId)
-export const FACTORY_ADDRESS = '0x3c2f50a7232a960d6d5ece9c1583b3bec6c23663'
+export const FACTORY_ADDRESS = '0xdb7d8719a03d02fc7595803f8365e3fa3364fce5' // !! Needs to be lowercase
 export const WAVAX_ADDRESS = '0xd00ae08403b9bbb9124bb305c09058e32c39a48c'
 // export const WAVAX_ADDRESS = '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7'
 

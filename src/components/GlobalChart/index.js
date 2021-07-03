@@ -88,7 +88,7 @@ const GlobalChart = ({ display }) => {
             base={totalLiquidityUSD}
             baseChange={liquidityChangeUSD}
             title="Liquidity"
-            field="totalLiquidityUSD"
+            field="totalLiquidityAVAX"
             width={width}
             type={CHART_TYPES.AREA}
           />

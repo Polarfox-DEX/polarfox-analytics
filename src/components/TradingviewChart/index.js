@@ -47,7 +47,7 @@ const TradingViewChart = ({ type = CHART_TYPES.BAR, data, base, baseChange, fiel
 
   console.log('Trading view data:', data)
 
-  // parese the data and format for tardingview consumption
+  // parse the data and format for trading view consumption
   const formattedData = data?.map((entry) => {
     return {
       time: dayjs.unix(entry.date).utc().format('YYYY-MM-DD'),
@@ -163,7 +163,7 @@ const TradingViewChart = ({ type = CHART_TYPES.BAR, data, base, baseChange, fiel
       function setLastBarText() {
         toolTip.innerHTML =
           `<div style="font-size: 16px; margin: 4px 0px; color: ${textColor};">${title} ${
-            type === CHART_TYPES.BAR && !useWeekly ? '(24hr)' : ''
+            type === CHART_TYPES.BAR && !useWeekly ? '(24hrs)' : ''
           }</div>` +
           `<div style="font-size: 22px; margin: 4px 0px; color:${textColor}" >` +
           formattedNum(base ?? 0, true) +

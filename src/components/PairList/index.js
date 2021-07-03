@@ -105,14 +105,14 @@ const SORT_FIELD = {
   VOL: 1,
   VOL_7DAYS: 3,
   FEES: 4,
-  APY: 5,
+  APY: 5
 }
 
 const FIELD_TO_VALUE = {
   [SORT_FIELD.LIQ]: 'trackedReserveUSD', // sort with tracked volume only
   [SORT_FIELD.VOL]: 'oneDayVolumeUSD',
   [SORT_FIELD.VOL_7DAYS]: 'oneWeekVolumeUSD',
-  [SORT_FIELD.FEES]: 'oneDayVolumeUSD',
+  [SORT_FIELD.FEES]: 'oneDayVolumeUSD'
 }
 
 function PairList({ pairs, color, disbaleLinks, maxItems = 10 }) {
@@ -156,12 +156,7 @@ function PairList({ pairs, color, disbaleLinks, maxItems = 10 }) {
         <DashGrid style={{ height: '48px' }} disbaleLinks={disbaleLinks} focus={true}>
           <DataText area="name" fontWeight="500">
             {!below600 && <div style={{ marginRight: '20px', width: '10px' }}>{index}</div>}
-            <DoubleTokenLogo
-              size={below600 ? 16 : 20}
-              a0={pairData.token0.id}
-              a1={pairData.token1.id}
-              margin={!below740}
-            />
+            <DoubleTokenLogo size={below600 ? 16 : 20} a0={pairData.token0.id} a1={pairData.token1.id} margin={!below740} />
             <CustomLink style={{ marginLeft: '20px', whiteSpace: 'nowrap' }} to={'/pair/' + pairAddress} color={color}>
               <FormattedName
                 text={pairData.token0.symbol + '-' + pairData.token1.symbol}
@@ -212,11 +207,7 @@ function PairList({ pairs, color, disbaleLinks, maxItems = 10 }) {
 
   return (
     <ListWrapper>
-      <DashGrid
-        center={true}
-        disbaleLinks={disbaleLinks}
-        style={{ height: 'fit-content', padding: '0 1.125rem 1rem 1.125rem' }}
-      >
+      <DashGrid center={true} disbaleLinks={disbaleLinks} style={{ height: 'fit-content', padding: '0 1.125rem 1rem 1.125rem' }}>
         <Flex alignItems="center" justifyContent="flexStart">
           <TYPE.main area="name">Name</TYPE.main>
         </Flex>
@@ -265,7 +256,7 @@ function PairList({ pairs, color, disbaleLinks, maxItems = 10 }) {
                 setSortDirection(sortedColumn !== SORT_FIELD.FEES ? true : !sortDirection)
               }}
             >
-              Fees (24hr) {sortedColumn === SORT_FIELD.FEES ? (!sortDirection ? '↑' : '↓') : ''}
+              Fees (24hrs) {sortedColumn === SORT_FIELD.FEES ? (!sortDirection ? '↑' : '↓') : ''}
             </ClickableText>
           </Flex>
         )}
