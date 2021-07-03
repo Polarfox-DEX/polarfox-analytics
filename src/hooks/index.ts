@@ -21,12 +21,7 @@ export function useColor(tokenAddress, token) {
             detectedHex = shade(0.005, detectedHex)
             AAscore = hex(detectedHex, '#FFF')
           }
-          if (token === 'DAI') {
-            // TODO: Remove?
-            setColor('#FAAB14')
-          } else {
-            setColor(detectedHex)
-          }
+          setColor(detectedHex)
         }
       })
     }

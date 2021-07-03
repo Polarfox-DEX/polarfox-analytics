@@ -19,7 +19,7 @@ const AccountWrapper = styled.div`
   }
 `
 
-function AccountLookup() {
+function AccountLookup({ chainId }) {
   // scroll to top
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -34,7 +34,7 @@ function AccountLookup() {
       <FullWrapper>
         <RowBetween>
           <TYPE.largeHeader>Wallet analytics</TYPE.largeHeader>
-          {!below600 && <Search small={true} />}
+          {!below600 && <Search small={true} chainId={chainId} />}
         </RowBetween>
         <AccountWrapper>
           <AccountSearch />

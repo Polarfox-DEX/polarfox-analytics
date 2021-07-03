@@ -180,18 +180,18 @@ export const SHARE_VALUE = (pairAddress, blocks) => {
   return gql(queryString)
 }
 
-export const AVAX_PRICE = (block) => {
+export const AVAX_PRICE = (block, chainId) => {
   const queryString = block
     ? `
     query bundles {
-      bundles(where: { id: ${BUNDLE_ID} } block: {number: ${block}}) {
+      bundles(where: { id: ${BUNDLE_ID[chainId]} } block: {number: ${block}}) {
         id
         avaxPrice
       }
     }
   `
     : ` query bundles {
-      bundles(where: { id: ${BUNDLE_ID} }) {
+      bundles(where: { id: ${BUNDLE_ID[chainId]} }) {
         id
         avaxPrice
       }
@@ -439,11 +439,11 @@ export const GLOBAL_CHART = gql`
   }
 `
 
-export const GLOBAL_DATA = (block) => {
+export const GLOBAL_DATA = ({ block, chainId }) => {
   const queryString = ` query polarfoxFactories {
       polarfoxFactories(
        ${block ? `block: { number: ${block}}` : ``} 
-       where: { id: "${FACTORY_ADDRESS}" }) {
+       where: { id: "${FACTORY_ADDRESS[chainId]}" }) {
         id
         totalVolumeUSD
         totalVolumeAVAX

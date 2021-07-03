@@ -20,7 +20,7 @@ const VOLUME_WINDOW = {
   DAYS: 'DAYS'
 }
 
-const GlobalChart = ({ display }) => {
+const GlobalChart = ({ display, chainId }) => {
   // chart options
   const [chartView, setChartView] = useState(display === 'volume' ? CHART_VIEW.VOLUME : CHART_VIEW.LIQUIDITY)
 
@@ -30,7 +30,9 @@ const GlobalChart = ({ display }) => {
 
   // global historical data
   const [dailyData, weeklyData] = useGlobalChartData()
-  const { totalLiquidityUSD, oneDayVolumeUSD, volumeChangeUSD, liquidityChangeUSD, oneWeekVolume, weeklyVolumeChange } = useGlobalData()
+  const { totalLiquidityUSD, oneDayVolumeUSD, volumeChangeUSD, liquidityChangeUSD, oneWeekVolume, weeklyVolumeChange } = useGlobalData(
+    chainId
+  )
 
   console.log('totalLiquidityUSD:', totalLiquidityUSD)
   console.log('oneDayVolumeUSD:', oneDayVolumeUSD)

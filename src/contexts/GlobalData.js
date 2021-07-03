@@ -190,7 +190,7 @@ export default function Provider({ children }) {
  * @param {*} avaxPrice
  * @param {*} oldAvaxPrice
  */
-async function getGlobalData(avaxPrice, oldAvaxPrice) {
+async function getGlobalData(avaxPrice, oldAvaxPrice, chainId) {
   // data for each day, historic data used for % changes
   let data = {}
   let oneDayData = {}
@@ -216,39 +216,40 @@ async function getGlobalData(avaxPrice, oldAvaxPrice) {
 
     // fetch the global data
     let result = await client.query({
-      query: GLOBAL_DATA(),
+      query: GLOBAL_DATA({ chainId: chainId }),
       fetchPolicy: 'cache-first'
     })
     data = result.data.polarfoxFactories[0]
 
     // fetch the historical data
     let oneDayResult = await client.query({
-      query: GLOBAL_DATA(oneDayBlock?.number),
+      query: GLOBAL_DATA({ block: oneDayBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     oneDayData = oneDayResult.data.polarfoxFactories[0]
 
     let twoDayResult = await client.query({
-      query: GLOBAL_DATA(twoDayBlock?.number),
+      query: GLOBAL_DATA({ block: twoDayBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     twoDayData = twoDayResult.data.polarfoxFactories[0]
 
     let oneWeekResult = await client.query({
-      query: GLOBAL_DATA(oneWeekBlock?.number),
+      query: GLOBAL_DATA({ block: oneWeekBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     const oneWeekData = oneWeekResult.data.polarfoxFactories[0]
 
+    console.log('#2 - ChainId:', chainId)
+
     let twoWeekResult = await client.query({
-      query: GLOBAL_DATA(twoWeekBlock?.number),
+      query: GLOBAL_DATA({ block: twoWeekBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     const twoWeekData = twoWeekResult.data.polarfoxFactories[0]
 
-    console.log('oneWeekResult:', oneWeekResult)
-
-    console.log('oneWeekData:', oneWeekData)
+    console.log('oneDayResult:', oneDayResult)
+    console.log('oneDayData:', oneDayData)
 
     if (data) {
       //if (data && oneDayData && twoDayData && twoWeekData) {
@@ -566,7 +567,7 @@ async function getAllTokensOnUniswap() {
 /**
  * Hook that fetches overview data, plus all tokens and pairs for search
  */
-export function useGlobalData() {
+export function useGlobalData(chainId) {
   const [state, { update, updateAllPairsInUniswap, updateAllTokensInUniswap }] = useGlobalDataContext()
   const [avaxPrice, oldAvaxPrice] = useAvaxPrice()
 
@@ -577,7 +578,7 @@ export function useGlobalData() {
   useEffect(() => {
     async function fetchData() {
       console.log('Fetching data...')
-      let globalData = await getGlobalData(avaxPrice, oldAvaxPrice)
+      let globalData = await getGlobalData(avaxPrice, oldAvaxPrice, chainId)
       console.log('Passed getGlobalData')
       console.log('Got the global data:', globalData)
       globalData && update(globalData)
@@ -596,7 +597,7 @@ export function useGlobalData() {
       console.log('Call to fetchData()')
       fetchData()
     }
-  }, [avaxPrice, oldAvaxPrice, update, data, updateAllPairsInUniswap, updateAllTokensInUniswap])
+  }, [avaxPrice, oldAvaxPrice, update, data, updateAllPairsInUniswap, updateAllTokensInUniswap, chainId])
 
   return data || {}
 }

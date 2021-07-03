@@ -88,7 +88,7 @@ const WarningGrouping = styled.div`
   pointer-events: ${({ disabled }) => disabled && 'none'};
 `
 
-function TokenPage({ address, history }) {
+function TokenPage({ address, history, chainId }) {
   const {
     id,
     name,
@@ -102,7 +102,7 @@ function TokenPage({ address, history }) {
     priceChangeUSD,
     liquidityChangeUSD,
     oneDayTxns,
-    txnChange,
+    txnChange
   } = useTokenData(address)
 
   useEffect(() => {
@@ -129,8 +129,8 @@ function TokenPage({ address, history }) {
     oneDayVolumeUSD || oneDayVolumeUSD === 0
       ? formattedNum(oneDayVolumeUSD === 0 ? oneDayVolumeUT : oneDayVolumeUSD, true)
       : oneDayVolumeUSD === 0
-        ? '$0'
-        : '-'
+      ? '$0'
+      : '-'
 
   // mark if using untracked volume
   const [usingUtVolume, setUsingUtVolume] = useState(false)
@@ -158,12 +158,12 @@ function TokenPage({ address, history }) {
 
   const [dismissed, markAsDismissed] = usePathDismissed(history.location.pathname)
   const [savedTokens, addToken] = useSavedTokens()
-  const listedTokens = useListedTokens()
+  const listedTokens = useListedTokens(chainId)
 
   useEffect(() => {
     window.scrollTo({
       behavior: 'smooth',
-      top: 0,
+      top: 0
     })
   }, [])
 
@@ -195,7 +195,7 @@ function TokenPage({ address, history }) {
               </Text>
             </Link>
           </AutoRow>
-          {!below600 && <Search small={true} />}
+          {!below600 && <Search small={true} chainId={chainId} />}
         </RowBetween>
 
         <WarningGrouping disabled={!dismissed && listedTokens && !listedTokens.includes(address)}>
@@ -204,7 +204,7 @@ function TokenPage({ address, history }) {
               style={{
                 flexWrap: 'wrap',
                 marginBottom: '2rem',
-                alignItems: 'flex-start',
+                alignItems: 'flex-start'
               }}
             >
               <RowFixed style={{ flexWrap: 'wrap' }}>
@@ -239,12 +239,12 @@ function TokenPage({ address, history }) {
                       <Bookmark style={{ marginRight: '0.5rem', opacity: 0.4 }} />
                     </StyledIcon>
                   ) : (
-                        <></>
-                      )}
-                  <Link href={getPoolLink(address)} target="_blank">
+                    <></>
+                  )}
+                  <Link href={getPoolLink(address, chainId)} target="_blank">
                     <ButtonLight color={backgroundColor}>+ Add Liquidity</ButtonLight>
                   </Link>
-                  <Link href={getSwapLink(address)} target="_blank">
+                  <Link href={getSwapLink(address, chainId)} target="_blank">
                     <ButtonDark ml={'.5rem'} mr={below1080 && '.5rem'} color={backgroundColor}>
                       Trade
                     </ButtonDark>
@@ -318,7 +318,7 @@ function TokenPage({ address, history }) {
                 <Panel
                   style={{
                     gridColumn: below1080 ? '1' : '2/4',
-                    gridRow: below1080 ? '' : '1/4',
+                    gridRow: below1080 ? '' : '1/4'
                   }}
                 >
                   <TokenChart address={address} color={backgroundColor} base={priceUSD} />
@@ -335,21 +335,15 @@ function TokenPage({ address, history }) {
               rounded
               style={{
                 marginTop: '1.5rem',
-                padding: '1.125rem 0 ',
+                padding: '1.125rem 0 '
               }}
             >
-              {address && fetchedPairsList ? (
-                <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} />
-              ) : (
-                  <Loader />
-                )}
+              {address && fetchedPairsList ? <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} /> : <Loader />}
             </Panel>
             <RowBetween mt={40} mb={'1rem'}>
               <TYPE.main fontSize={'1.125rem'}>Transactions</TYPE.main> <div />
             </RowBetween>
-            <Panel rounded>
-              {transactions ? <TxnList color={backgroundColor} transactions={transactions} /> : <Loader />}
-            </Panel>
+            <Panel rounded>{transactions ? <TxnList color={backgroundColor} transactions={transactions} /> : <Loader />}</Panel>
             <>
               <RowBetween style={{ marginTop: '3rem' }}>
                 <TYPE.main fontSize={'1.125rem'}>Token Information</TYPE.main>{' '}
@@ -357,7 +351,7 @@ function TokenPage({ address, history }) {
               <Panel
                 rounded
                 style={{
-                  marginTop: '1.5rem',
+                  marginTop: '1.5rem'
                 }}
                 p={20}
               >

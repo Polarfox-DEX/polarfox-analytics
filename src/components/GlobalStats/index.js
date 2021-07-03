@@ -17,14 +17,14 @@ const Medium = styled.span`
   font-weight: 500;
 `
 
-export default function GlobalStats() {
+export default function GlobalStats(chainId) {
   const below1295 = useMedia('(max-width: 1295px)')
   const below1180 = useMedia('(max-width: 1180px)')
   const below1024 = useMedia('(max-width: 1024px)')
   const below400 = useMedia('(max-width: 400px)')
   const below816 = useMedia('(max-width: 816px)')
 
-  const { oneDayVolumeUSD, oneDayTxns, pairCount } = useGlobalData()
+  const { oneDayVolumeUSD, oneDayTxns, pairCount } = useGlobalData(chainId)
   const [avaxPrice] = useAvaxPrice()
   const formattedAvaxPrice = avaxPrice ? formattedNum(avaxPrice, true) : '-'
   const oneDayFees = oneDayVolumeUSD ? formattedNum(oneDayVolumeUSD * 0.003, true) : ''

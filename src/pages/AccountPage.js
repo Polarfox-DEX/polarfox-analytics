@@ -88,7 +88,7 @@ const Warning = styled.div`
   width: calc(100% - 2rem);
 `
 
-function AccountPage({ account }) {
+function AccountPage({ account, chainId }) {
   // get data for this account
   const transactions = useUserTransactions(account)
   const positions = useUserPositions(account)
@@ -110,12 +110,15 @@ function AccountPage({ account }) {
   useEffect(() => {
     if (positions) {
       for (let i = 0; i < positions.length; i++) {
-        if (FEE_WARNING_TOKENS.includes(positions[i].pair.token0.id) || FEE_WARNING_TOKENS.includes(positions[i].pair.token1.id)) {
+        if (
+          FEE_WARNING_TOKENS[chainId].includes(positions[i].pair.token0.id) ||
+          FEE_WARNING_TOKENS[chainId].includes(positions[i].pair.token1.id)
+        ) {
           setShowWarning(true)
         }
       }
     }
-  }, [positions])
+  }, [positions, chainId])
 
   // settings for list view and dropdowns
   const hideLPContent = positions && positions.length === 0
@@ -161,7 +164,7 @@ function AccountPage({ account }) {
               {account?.slice(0, 42)}{' '}
             </Link>
           </TYPE.body>
-          {!below600 && <Search small={true} />}
+          {!below600 && <Search small={true} chainId={chainId} />}
         </RowBetween>
         <Header>
           <RowBetween>
@@ -302,7 +305,7 @@ function AccountPage({ account }) {
               marginTop: '1.5rem'
             }}
           >
-            <PositionList positions={positions} />
+            <PositionList positions={positions} chainId={chainId} />
           </Panel>
           <TYPE.main fontSize={'1.125rem'} style={{ marginTop: '3rem' }}>
             Transactions

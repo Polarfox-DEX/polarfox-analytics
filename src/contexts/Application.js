@@ -258,13 +258,13 @@ export function useSessionStart() {
   return parseInt(seconds / 1000)
 }
 
-export function useListedTokens() {
+export function useListedTokens(chainId) {
   const [state, { updateSupportedTokens }] = useApplicationContext()
   const supportedTokens = state?.[SUPPORTED_TOKENS]
 
   useEffect(() => {
     async function fetchList() {
-      const allFetched = await SUPPORTED_LIST_URLS__NO_ENS.reduce(async (fetchedTokens, url) => {
+      const allFetched = await SUPPORTED_LIST_URLS__NO_ENS[chainId].reduce(async (fetchedTokens, url) => {
         const tokensSoFar = await fetchedTokens
         const newTokens = await getTokenList(url)
         return Promise.resolve([...tokensSoFar, ...newTokens.tokens])
@@ -275,7 +275,7 @@ export function useListedTokens() {
     if (!supportedTokens) {
       fetchList()
     }
-  }, [updateSupportedTokens, supportedTokens])
+  }, [updateSupportedTokens, supportedTokens, chainId])
 
   return supportedTokens
 }

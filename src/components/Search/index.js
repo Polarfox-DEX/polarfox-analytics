@@ -38,8 +38,7 @@ const Wrapper = styled.div`
   justify-content: flex-end;
   padding: 12px 16px;
   border-radius: 12px;
-  background: ${({ theme, small, open }) =>
-    small ? (open ? transparentize(0.4, theme.bg1) : 'none') : transparentize(0.4, theme.bg6)};
+  background: ${({ theme, small, open }) => (small ? (open ? transparentize(0.4, theme.bg1) : 'none') : transparentize(0.4, theme.bg6))};
   border-bottom-right-radius: ${({ open }) => (open ? '0px' : '12px')};
   border-bottom-left-radius: ${({ open }) => (open ? '0px' : '12px')};
   z-index: 9999;
@@ -150,7 +149,7 @@ const Blue = styled.span`
   }
 `
 
-export const Search = ({ small = false }) => {
+export const Search = ({ small = false, chainId }) => {
   let allTokens = useAllTokensInUniswap()
   const allTokenData = useAllTokenData()
 
@@ -188,17 +187,17 @@ export const Search = ({ small = false }) => {
           let tokens = await client.query({
             variables: {
               value: value ? value.toUpperCase() : '',
-              id: value,
+              id: value
             },
-            query: TOKEN_SEARCH,
+            query: TOKEN_SEARCH
           })
 
           let pairs = await client.query({
             query: PAIR_SEARCH,
             variables: {
               tokens: tokens.data.asSymbol?.map((t) => t.id),
-              id: value,
-            },
+              id: value
+            }
           })
           setSearchedPairs(pairs.data.as0.concat(pairs.data.as1).concat(pairs.data.asAddress))
           let foundTokens = tokens.data.asSymbol.concat(tokens.data.asAddress).concat(tokens.data.asName)
@@ -268,10 +267,10 @@ export const Search = ({ small = false }) => {
     return uniqueTokens
       ? uniqueTokens
           .sort((a, b) => {
-            if (OVERVIEW_TOKEN_BLACKLIST.includes(a.id)) {
+            if (OVERVIEW_TOKEN_BLACKLIST[chainId].includes(a.id)) {
               return 1
             }
-            if (OVERVIEW_TOKEN_BLACKLIST.includes(b.id)) {
+            if (OVERVIEW_TOKEN_BLACKLIST[chainId].includes(b.id)) {
               return -1
             }
             const tokenA = allTokenData[a.id]
@@ -288,7 +287,7 @@ export const Search = ({ small = false }) => {
             return 1
           })
           .filter((token) => {
-            if (OVERVIEW_TOKEN_BLACKLIST.includes(token.id)) {
+            if (OVERVIEW_TOKEN_BLACKLIST[chainId].includes(token.id)) {
               return false
             }
             const regexMatches = Object.keys(token).map((tokenEntryKey) => {
@@ -307,7 +306,7 @@ export const Search = ({ small = false }) => {
             return regexMatches.some((m) => m)
           })
       : []
-  }, [allTokenData, uniqueTokens, value])
+  }, [allTokenData, uniqueTokens, value, chainId])
 
   const filteredPairList = useMemo(() => {
     return uniquePairs
@@ -327,7 +326,7 @@ export const Search = ({ small = false }) => {
             return 0
           })
           .filter((pair) => {
-            if (PAIR_BLACKLIST.includes(pair.id)) {
+            if (PAIR_BLACKLIST[chainId].includes(pair.id)) {
               return false
             }
             if (value && value.includes(' ')) {
@@ -368,7 +367,7 @@ export const Search = ({ small = false }) => {
             return regexMatches.some((m) => m)
           })
       : []
-  }, [allPairData, uniquePairs, value])
+  }, [allPairData, uniquePairs, value, chainId])
 
   useEffect(() => {
     if (Object.keys(filteredTokenList).length > 2) {
@@ -401,10 +400,7 @@ export const Search = ({ small = false }) => {
   const menuRef = useRef()
 
   const handleClick = (e) => {
-    if (
-      !(menuRef.current && menuRef.current.contains(e.target)) &&
-      !(wrapperRef.current && wrapperRef.current.contains(e.target))
-    ) {
+    if (!(menuRef.current && menuRef.current.contains(e.target)) && !(wrapperRef.current && wrapperRef.current.contains(e.target))) {
       setPairsShown(3)
       setTokensShown(3)
       toggleMenu(false)
@@ -466,16 +462,12 @@ export const Search = ({ small = false }) => {
                 <BasicLink to={'/pair/' + pair.id} key={pair.id} onClick={onDismiss}>
                   <MenuItem>
                     <DoubleTokenLogo a0={pair?.token0?.id} a1={pair?.token1?.id} margin={true} />
-                    <TYPE.body style={{ marginLeft: '10px' }}>
-                      {pair.token0.symbol + '-' + pair.token1.symbol} Pair
-                    </TYPE.body>
+                    <TYPE.body style={{ marginLeft: '10px' }}>{pair.token0.symbol + '-' + pair.token1.symbol} Pair</TYPE.body>
                   </MenuItem>
                 </BasicLink>
               )
             })}
-          <Heading
-            hide={!(Object.keys(filteredPairList).length > 3 && Object.keys(filteredPairList).length >= pairsShown)}
-          >
+          <Heading hide={!(Object.keys(filteredPairList).length > 3 && Object.keys(filteredPairList).length >= pairsShown)}>
             <Blue
               onClick={() => {
                 setPairsShown(pairsShown + 5)
@@ -508,9 +500,7 @@ export const Search = ({ small = false }) => {
             )
           })}
 
-          <Heading
-            hide={!(Object.keys(filteredTokenList).length > 3 && Object.keys(filteredTokenList).length >= tokensShown)}
-          >
+          <Heading hide={!(Object.keys(filteredTokenList).length > 3 && Object.keys(filteredTokenList).length >= tokensShown)}>
             <Blue
               onClick={() => {
                 setTokensShown(tokensShown + 5)

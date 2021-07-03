@@ -3,11 +3,7 @@ import { client } from '../apollo/client'
 import dayjs from 'dayjs'
 import { getShareValueOverTime } from '.'
 
-// TODO: Update the below
-export const priceOverrides = [
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
-  '0x6b175474e89094c44da98b954eedeac495271d0f' // DAI
-]
+export const priceOverrides = []
 
 interface ReturnMetrics {
   hodleReturn: number // difference in asset values t0 -> t1 with t0 deposit amounts
@@ -29,6 +25,7 @@ interface Position {
   token1PriceUSD: number
 }
 
+// TODO: Update the below, make it depend on the chainId
 const PRICE_DISCOVERY_START_TIMESTAMP = 1589747086
 
 function formatPricesForEarlyTimestamps(position): Position {
@@ -38,15 +35,6 @@ function formatPricesForEarlyTimestamps(position): Position {
     }
     if (priceOverrides.includes(position?.pair?.token1.id)) {
       position.token1PriceUSD = 1
-    }
-    // WAVAX price
-    if (position.pair?.token0.id === '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2') {
-      // TODO: Hardcoded value, update
-      position.token0PriceUSD = 203
-    }
-    if (position.pair?.token1.id === '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2') {
-      // TODO: Hardcoded value, update
-      position.token1PriceUSD = 203
     }
   }
   return position

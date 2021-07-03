@@ -37,27 +37,31 @@ export function getTimeframe(timeWindow) {
   return utcStartTime
 }
 
-export function getPoolLink(token0Address, token1Address = null, remove = false) {
+export function getPoolLink(token0Address, token1Address = null, remove = false, chainId) {
   if (!token1Address) {
     return (
-      `https://dex.polarfox.io/#/` + (remove ? `remove` : `add`) + `/${token0Address === WAVAX_ADDRESS ? 'AVAX' : token0Address}/${'AVAX'}`
+      `https://dex.polarfox.io/#/` +
+      (remove ? `remove` : `add`) +
+      `/${token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address}/${'AVAX'}`
     )
   } else {
     return (
       `https://dex.polarfox.io/#/` +
       (remove ? `remove` : `add`) +
-      `/${token0Address === WAVAX_ADDRESS ? 'AVAX' : token0Address}/${token1Address === WAVAX_ADDRESS ? 'AVAX' : token1Address}`
+      `/${token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address}/${
+        token1Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token1Address
+      }`
     )
   }
 }
 
-export function getSwapLink(token0Address, token1Address = null) {
+export function getSwapLink(token0Address, token1Address = null, chainId) {
   if (!token1Address) {
     return `https://dex.polarfox.io/#/swap?inputCurrency=${token0Address}`
   } else {
-    return `https://dex.polarfox.io/#/swap?inputCurrency=${token0Address === WAVAX_ADDRESS ? 'AVAX' : token0Address}&outputCurrency=${
-      token1Address === WAVAX_ADDRESS ? 'AVAX' : token1Address
-    }`
+    return `https://dex.polarfox.io/#/swap?inputCurrency=${
+      token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address
+    }&outputCurrency=${token1Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token1Address}`
   }
 }
 

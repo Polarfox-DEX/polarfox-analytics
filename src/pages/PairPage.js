@@ -107,7 +107,7 @@ const WarningGrouping = styled.div`
   pointer-events: ${({ disabled }) => disabled && 'none'};
 `
 
-function PairPage({ pairAddress, history }) {
+function PairPage({ pairAddress, history, chainId }) {
   const {
     token0,
     token1,
@@ -192,7 +192,7 @@ function PairPage({ pairAddress, history }) {
 
   const [savedPairs, addPair] = useSavedPairs()
 
-  const listedTokens = useListedTokens()
+  const listedTokens = useListedTokens(chainId)
 
   return (
     <PageWrapper>
@@ -221,7 +221,7 @@ function PairPage({ pairAddress, history }) {
               </Text>
             </Link>
           </AutoRow>
-          {!below600 && <Search small={true} />}
+          {!below600 && <Search small={true} chainId={chainId} />}
         </RowBetween>
 
         <WarningGrouping disabled={!dismissed && listedTokens && !(listedTokens.includes(token0?.id) && listedTokens.includes(token1?.id))}>
@@ -272,10 +272,10 @@ function PairPage({ pairAddress, history }) {
                     <></>
                   )}
 
-                  <Link external href={getPoolLink(token0?.id, token1?.id)}>
+                  <Link external href={getPoolLink(token0?.id, token1?.id, chainId)}>
                     <ButtonLight color={backgroundColor}>+ Add Liquidity</ButtonLight>
                   </Link>
-                  <Link external href={getSwapLink(token0?.id, token1?.id)}>
+                  <Link external href={getSwapLink(token0?.id, token1?.id, chainId)}>
                     <ButtonDark ml={!below1080 && '.5rem'} mr={below1080 && '.5rem'} color={backgroundColor}>
                       Trade
                     </ButtonDark>

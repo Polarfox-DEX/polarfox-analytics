@@ -107,7 +107,7 @@ const SORT_FIELD = {
   UNISWAP_RETURN: 'UNISWAP_RETURN'
 }
 
-function PositionList({ positions }) {
+function PositionList({ positions, chainId }) {
   const below500 = useMedia('(max-width: 500px)')
   const below740 = useMedia('(max-width: 740px)')
 
@@ -156,11 +156,11 @@ function PositionList({ positions }) {
             </CustomLink>
 
             <RowFixed gap="8px" justify="flex-start">
-              <Link external href={getPoolLink(position.pair.token0.id, position.pair.token1.id)} style={{ marginRight: '.5rem' }}>
+              <Link external href={getPoolLink(position.pair.token0.id, position.pair.token1.id, chainId)} style={{ marginRight: '.5rem' }}>
                 <ButtonLight style={{ padding: '4px 6px', borderRadius: '4px' }}>Add</ButtonLight>
               </Link>
               {poolOwnership > 0 && (
-                <Link external href={getPoolLink(position.pair.token0.id, position.pair.token1.id, true)}>
+                <Link external href={getPoolLink(position.pair.token0.id, position.pair.token1.id, true, chainId)}>
                   <ButtonLight style={{ padding: '4px 6px', borderRadius: '4px' }}>Remove</ButtonLight>
                 </Link>
               )}
