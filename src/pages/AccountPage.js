@@ -125,6 +125,7 @@ function AccountPage({ account, chainId }) {
   const [showDropdown, setShowDropdown] = useState(false)
   const [activePosition, setActivePosition] = useState()
 
+  // TODO: Fix the warning below
   const dynamicPositions = activePosition ? [activePosition] : positions
 
   const aggregateFees = dynamicPositions?.reduce(function (total, position) {
@@ -138,7 +139,9 @@ function AccountPage({ account, chainId }) {
       ? dynamicPositions.reduce((total, position) => {
           return (
             total +
-            (parseFloat(position?.liquidityTokenBalance) / parseFloat(position?.pair?.totalSupply)) * position?.pair?.reserveUSD * avaxPrice
+            (parseFloat(position?.liquidityTokenBalance) / parseFloat(position?.pair?.totalSupply)) *
+              position?.pair?.reserveAVAX *
+              avaxPrice
           )
         }, 0)
       : null

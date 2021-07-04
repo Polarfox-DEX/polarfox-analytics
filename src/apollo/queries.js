@@ -90,6 +90,7 @@ export const POSITIONS_BY_BLOCK = (account, blocks) => {
           id
           totalSupply
           reserveUSD
+          reserveAVAX
         }
       }
     `
@@ -157,6 +158,7 @@ export const SHARE_VALUE = (pairAddress, blocks) => {
         reserve0
         reserve1
         reserveUSD
+        reserveAVAX
         totalSupply 
         token0{
           derivedAVAX
@@ -287,6 +289,7 @@ export const USER_POSITIONS = gql`
         reserve0
         reserve1
         reserveUSD
+        reserveAVAX
         token0 {
           id
           symbol
@@ -382,7 +385,9 @@ export const PAIR_CHART = gql`
       date
       dailyVolumeToken0
       dailyVolumeToken1
+      dailyVolumeAVAX
       dailyVolumeUSD
+      reserveAVAX
       reserveUSD
     }
   }
@@ -395,8 +400,10 @@ export const PAIR_DAY_DATA = gql`
       date
       dailyVolumeToken0
       dailyVolumeToken1
+      dailyVolumeAVAX
       dailyVolumeUSD
       totalSupply
+      reserveAVAX
       reserveUSD
     }
   }
@@ -416,8 +423,10 @@ export const PAIR_DAY_DATA_BULK = (pairs, startTimestamp) => {
         date
         dailyVolumeToken0
         dailyVolumeToken1
+        dailyVolumeAVAX
         dailyVolumeUSD
         totalSupply
+        reserveAVAX
         reserveUSD
       }
     } 
@@ -714,6 +723,7 @@ export const PAIRS_HISTORICAL_BULK = (block, pairs) => {
     pairs(first: 200, where: {id_in: ${pairsString}}, block: {number: ${block}}, orderBy: trackedReserveAVAX, orderDirection: desc) {
       id
       reserveUSD
+      reserveAVAX
       trackedReserveAVAX
       volumeUSD
       untrackedVolumeUSD

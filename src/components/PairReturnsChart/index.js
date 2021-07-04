@@ -31,7 +31,7 @@ const OptionsRow = styled.div`
 
 const CHART_VIEW = {
   VALUE: 'Value',
-  FEES: 'Fees',
+  FEES: 'Fees'
 }
 
 const PairReturnsChart = ({ account, position }) => {
@@ -72,22 +72,13 @@ const PairReturnsChart = ({ account, position }) => {
             </OptionButton>
           </AutoRow>
           <AutoRow justify="flex-end" gap="6px">
-            <OptionButton
-              active={timeWindow === timeframeOptions.WEEK}
-              onClick={() => setTimeWindow(timeframeOptions.WEEK)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.WEEK} onClick={() => setTimeWindow(timeframeOptions.WEEK)}>
               1W
             </OptionButton>
-            <OptionButton
-              active={timeWindow === timeframeOptions.MONTH}
-              onClick={() => setTimeWindow(timeframeOptions.MONTH)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.MONTH} onClick={() => setTimeWindow(timeframeOptions.MONTH)}>
               1M
             </OptionButton>
-            <OptionButton
-              active={timeWindow === timeframeOptions.ALL_TIME}
-              onClick={() => setTimeWindow(timeframeOptions.ALL_TIME)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.ALL_TIME} onClick={() => setTimeWindow(timeframeOptions.ALL_TIME)}>
               All
             </OptionButton>
           </AutoRow>
@@ -134,7 +125,7 @@ const PairReturnsChart = ({ account, position }) => {
                 padding: '10px 14px',
                 borderRadius: 10,
                 borderColor: color,
-                color: 'black',
+                color: 'black'
               }}
               wrapperStyle={{ top: -70, left: -10 }}
             />

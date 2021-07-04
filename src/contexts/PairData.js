@@ -284,7 +284,10 @@ function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayB
   data.oneDayVolumeUntracked = oneDayVolumeUntracked
   data.volumeChangeUntracked = volumeChangeUntracked
 
-  // set liquiditry properties
+  // Recalculate reserveUSD using AVAX's real price
+  data.reserveUSD = data.reserveAVAX * avaxPrice
+
+  // set liquidity properties
   data.trackedReserveUSD = data.trackedReserveAVAX * avaxPrice
   data.liquidityChangeUSD = getPercentChange(data.reserveUSD * avaxPrice, oneDayData?.reserveUSD * avaxPrice)
 
@@ -365,13 +368,14 @@ const getPairChartData = async (pairAddress) => {
 
     let dayIndexSet = new Set()
     let dayIndexArray = []
+    let avaxPrice = await getCurrentAvaxPrice()
     const oneDay = 24 * 60 * 60
     data.forEach((dayData, i) => {
       // add the day index to the set of days
       dayIndexSet.add((data[i].date / oneDay).toFixed(0))
       dayIndexArray.push(data[i])
-      dayData.dailyVolumeUSD = parseFloat(dayData.dailyVolumeUSD)
-      dayData.reserveUSD = parseFloat(dayData.reserveUSD)
+      dayData.dailyVolumeUSD = parseFloat(dayData.dailyVolumeAVAX) * avaxPrice
+      dayData.reserveUSD = parseFloat(dayData.reserveAVAX) * avaxPrice
     })
 
     if (data[0]) {

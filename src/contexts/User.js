@@ -269,23 +269,12 @@ export function useUserPositionChart(position, account) {
   const currentPairData = usePairData(pairAddress)
   const [currentAVAXPrice] = useAvaxPrice()
 
-  // formatetd array to return for chart data
+  // formatted array to return for chart data
   const formattedHistory = state?.[account]?.[USER_PAIR_RETURNS_KEY]?.[pairAddress]
 
   useEffect(() => {
     async function fetchData() {
       let fetchedData = await getHistoricalPairReturns(startDateTimestamp, currentPairData, pairSnapshots, currentAVAXPrice)
-      if (fetchedData) {
-        for (let j = 0; j < fetchedData.length; j++) {
-          let latestAvaxPrice
-          if (j === fetchedData.length - 1) {
-            latestAvaxPrice = await getCurrentAvaxPrice()
-          } else {
-            latestAvaxPrice = await getAvaxPriceAtDate(fetchedData[j].date)
-          }
-          fetchedData[j].usdValue = fetchedData[j].usdValue * latestAvaxPrice
-        }
-      }
       updateUserPairReturns(account, pairAddress, fetchedData)
     }
     if (
