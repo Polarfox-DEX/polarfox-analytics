@@ -430,10 +430,8 @@ export const GLOBAL_CHART = gql`
     polarfoxDayDatas(first: 1000, skip: $skip, where: { date_gt: $startTime }, orderBy: date, orderDirection: asc) {
       id
       date
-      totalVolumeUSD
-      dailyVolumeUSD
+      totalVolumeAVAX
       dailyVolumeAVAX
-      totalLiquidityUSD
       totalLiquidityAVAX
     }
   }
@@ -445,10 +443,7 @@ export const GLOBAL_DATA = ({ block, chainId }) => {
        ${block ? `block: { number: ${block}}` : ``} 
        where: { id: "${FACTORY_ADDRESS[chainId]}" }) {
         id
-        totalVolumeUSD
         totalVolumeAVAX
-        untrackedVolumeUSD
-        totalLiquidityUSD
         totalLiquidityAVAX
         txCount
         pairCount
@@ -735,11 +730,9 @@ export const TOKEN_CHART = gql`
       date
       priceUSD
       totalLiquidityToken
-      totalLiquidityUSD
       totalLiquidityAVAX
       dailyVolumeAVAX
       dailyVolumeToken
-      dailyVolumeUSD
     }
   }
 `

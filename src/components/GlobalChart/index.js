@@ -90,7 +90,7 @@ const GlobalChart = ({ display, chainId }) => {
             base={totalLiquidityUSD}
             baseChange={liquidityChangeUSD}
             title="Liquidity"
-            field="totalLiquidityAVAX"
+            field="totalLiquidityUSD"
             width={width}
             type={CHART_TYPES.AREA}
           />

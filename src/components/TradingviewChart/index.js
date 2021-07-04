@@ -32,8 +32,6 @@ const TradingViewChart = ({ type = CHART_TYPES.BAR, data, base, baseChange, fiel
   const [chartCreated, setChartCreated] = useState(false)
   const dataPrev = usePrevious(data)
 
-  let avaxPrice = useAvaxPrice()[0]
-
   useEffect(() => {
     if (data !== dataPrev && chartCreated && type === CHART_TYPES.BAR) {
       // remove the tooltip element
@@ -51,7 +49,7 @@ const TradingViewChart = ({ type = CHART_TYPES.BAR, data, base, baseChange, fiel
   const formattedData = data?.map((entry) => {
     return {
       time: dayjs.unix(entry.date).utc().format('YYYY-MM-DD'),
-      value: parseFloat(entry[field]) * avaxPrice
+      value: parseFloat(entry[field])
     }
   })
 

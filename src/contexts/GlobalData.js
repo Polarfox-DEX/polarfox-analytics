@@ -256,6 +256,32 @@ async function getGlobalData(avaxPrice, oldAvaxPrice, chainId) {
 
       // format the total liquidity in USD
       data.totalLiquidityUSD = data.totalLiquidityAVAX * avaxPrice
+      data.totalVolumeUSD = data.totalVolumeAVAX * avaxPrice
+      data.untrackedVolumeUSD = data.untrackedVolumeAVAX * avaxPrice
+
+      if (oneDayData) {
+        oneDayData.totalLiquidityUSD = oneDayData.totalLiquidityAVAX * avaxPrice
+        oneDayData.totalVolumeUSD = oneDayData.totalVolumeAVAX * avaxPrice
+        oneDayData.untrackedVolumeUSD = oneDayData.untrackedVolumeAVAX * avaxPrice
+      }
+
+      if (twoDayData) {
+        twoDayData.totalLiquidityUSD = twoDayData.totalLiquidityAVAX * avaxPrice
+        twoDayData.totalVolumeUSD = twoDayData.totalVolumeAVAX * avaxPrice
+        twoDayData.untrackedVolumeUSD = twoDayData.untrackedVolumeAVAX * avaxPrice
+      }
+
+      if (oneWeekData) {
+        oneWeekData.totalLiquidityUSD = oneWeekData.totalLiquidityAVAX * avaxPrice
+        oneWeekData.totalVolumeUSD = oneWeekData.totalVolumeAVAX * avaxPrice
+        oneWeekData.untrackedVolumeUSD = oneWeekData.untrackedVolumeAVAX * avaxPrice
+      }
+
+      if (twoWeekData) {
+        twoWeekData.totalLiquidityUSD = twoWeekData.totalLiquidityAVAX * avaxPrice
+        twoWeekData.totalVolumeUSD = twoWeekData.totalVolumeAVAX * avaxPrice
+        twoWeekData.untrackedVolumeUSD = twoWeekData.untrackedVolumeAVAX * avaxPrice
+      }
 
       if (oneDayData && twoDayData) {
         let [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
@@ -284,7 +310,7 @@ async function getGlobalData(avaxPrice, oldAvaxPrice, chainId) {
         data.liquidityChangeUSD = liquidityChangeUSD
 
         // add relevant fields with the calculated amounts
-        data.oneDayVolumeUSD = oneDayVolumeUSD * avaxPrice
+        data.oneDayVolumeUSD = oneDayVolumeUSD
         data.volumeChangeUSD = volumeChangeUSD
         data.oneDayTxns = oneDayTxns
         data.txnChange = txnChange
@@ -336,11 +362,17 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
         // add the day index to the set of days
         dayIndexSet.add((data[i].date / oneDay).toFixed(0))
         dayIndexArray.push(data[i])
-        dayData.dailyVolumeUSD = parseFloat(dayData.dailyVolumeUSD)
+        dayData.dailyVolumeAVAX = parseFloat(dayData.dailyVolumeAVAX)
+        dayData.dailyVolumeUSD = dayData.dailyVolumeAVAX * avaxPrice
+        dayData.totalVolumeAVAX = parseFloat(dayData.totalVolumeAVAX)
+        dayData.totalVolumeUSD = dayData.totalVolumeAVAX * avaxPrice
+        dayData.totalLiquidityAVAX = parseFloat(dayData.totalLiquidityAVAX)
+        dayData.totalLiquidityUSD = dayData.totalLiquidityAVAX * avaxPrice
       })
 
       // fill in empty days ( there will be no day datas if no trades made that day )
       let timestamp = data[0].date ? data[0].date : oldestDateToFetch
+      let latestLiquidityAVAX = data[0].totalLiquidityAVAX
       let latestLiquidityUSD = data[0].totalLiquidityAVAX * avaxPrice
       let latestDayDats = data[0].mostLiquidTokens
       let index = 1
@@ -350,7 +382,9 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
         if (!dayIndexSet.has(currentDayIndex)) {
           data.push({
             date: nextDay,
+            dailyVolumeAVAX: 0,
             dailyVolumeUSD: 0,
+            totalLiquidityAVAX: latestLiquidityAVAX,
             totalLiquidityUSD: latestLiquidityUSD,
             mostLiquidTokens: latestDayDats
           })
@@ -375,6 +409,7 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
       }
       weeklyData[startIndexWeekly] = weeklyData[startIndexWeekly] || {}
       weeklyData[startIndexWeekly].date = data[i].date
+      weeklyData[startIndexWeekly].weeklyVolumeAVAX = (weeklyData[startIndexWeekly].weeklyVolumeAVAX ?? 0) + data[i].dailyVolumeAVAX
       weeklyData[startIndexWeekly].weeklyVolumeUSD = (weeklyData[startIndexWeekly].weeklyVolumeUSD ?? 0) + data[i].dailyVolumeUSD
     })
   } catch (e) {
@@ -403,19 +438,19 @@ const getGlobalTransactions = async () => {
       result.data.transactions.map((transaction) => {
         if (transaction.mints.length > 0) {
           transaction.mints.map((mint) => {
-            mint.amountUSD = (parseFloat(mint.amountUSD) * avaxPrice).toString()
+            mint.amountUSD = (parseFloat(mint.amountAVAX) * avaxPrice).toString()
             return transactions.mints.push(mint)
           })
         }
         if (transaction.burns.length > 0) {
           transaction.burns.map((burn) => {
-            burn.amountUSD = (parseFloat(burn.amountUSD) * avaxPrice).toString()
+            burn.amountUSD = (parseFloat(burn.amountAVAX) * avaxPrice).toString()
             return transactions.burns.push(burn)
           })
         }
         if (transaction.swaps.length > 0) {
           transaction.swaps.map((swap) => {
-            swap.amountUSD = (parseFloat(swap.amountUSD) * avaxPrice).toString()
+            swap.amountUSD = (parseFloat(swap.amountAVAX) * avaxPrice).toString()
             return transactions.swaps.push(swap)
           })
         }
@@ -694,7 +729,7 @@ export function useAllTokensInUniswap() {
 }
 
 /**
- * Get the top liquidity positions based on USD size
+ * Get the top liquidity positions based on AVAX size
  * @TODO Not a perfect lookup needs improvement
  */
 export function useTopLps() {
@@ -709,7 +744,7 @@ export function useTopLps() {
     async function fetchData() {
       // get top 20 by reserves
       let topPairs = Object.keys(allPairs)
-        ?.sort((a, b) => parseFloat(allPairs[a].reserveUSD > allPairs[b].reserveUSD ? -1 : 1))
+        ?.sort((a, b) => parseFloat(allPairs[a].reserveAVAX > allPairs[b].reserveAVAX ? -1 : 1))
         ?.slice(0, 99)
         .map((pair) => pair)
 
@@ -739,7 +774,7 @@ export function useTopLps() {
           return list.map((entry) => {
             const pairData = allPairs[entry.pair.id]
             const usd =
-              (parseFloat(entry.liquidityTokenBalance) / parseFloat(pairData.totalSupply)) * parseFloat(pairData.reserveUSD) * avaxPrice
+              (parseFloat(entry.liquidityTokenBalance) / parseFloat(pairData.totalSupply)) * parseFloat(pairData.reserveAVAX) * avaxPrice
             if (usd) {
               return topLps.push({
                 user: entry.user,
