@@ -288,7 +288,6 @@ export const USER_POSITIONS = gql`
         id
         reserve0
         reserve1
-        reserveUSD
         reserveAVAX
         token0 {
           id
@@ -330,7 +329,7 @@ export const USER_TRANSACTIONS = gql`
       liquidity
       amount0
       amount1
-      amountUSD
+      amountAVAX
     }
     burns(orderBy: timestamp, orderDirection: desc, where: { sender: $user }) {
       id
@@ -352,7 +351,7 @@ export const USER_TRANSACTIONS = gql`
       liquidity
       amount0
       amount1
-      amountUSD
+      amountAVAX
     }
     swaps(orderBy: timestamp, orderDirection: desc, where: { to: $user }) {
       id
@@ -372,7 +371,7 @@ export const USER_TRANSACTIONS = gql`
       amount0Out
       amount1In
       amount1Out
-      amountUSD
+      amountAVAX
       to
     }
   }
@@ -648,10 +647,11 @@ const PairFields = `
     }
     reserve0
     reserve1
+    reserveAVAX
     reserveUSD
     totalSupply
     trackedReserveAVAX
-    reserveAVAX
+    volumeAVAX
     volumeUSD
     untrackedVolumeUSD
     token0Price
@@ -725,6 +725,7 @@ export const PAIRS_HISTORICAL_BULK = (block, pairs) => {
       reserveUSD
       reserveAVAX
       trackedReserveAVAX
+      volumeAVAX
       volumeUSD
       untrackedVolumeUSD
     }
@@ -754,6 +755,7 @@ const TokenFields = `
     symbol
     derivedAVAX
     tradeVolume
+    tradeVolumeAVAX
     tradeVolumeUSD
     untrackedVolumeUSD
     totalLiquidity

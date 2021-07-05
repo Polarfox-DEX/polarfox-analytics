@@ -260,9 +260,9 @@ const getTopTokens = async (avaxPrice, avaxPriceOld) => {
 
           // calculate percentage changes and daily changes
           const [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
-            data.tradeVolumeUSD * avaxPrice,
-            oneDayHistory?.tradeVolumeUSD * avaxPrice ?? 0,
-            twoDayHistory?.tradeVolumeUSD * avaxPrice ?? 0
+            data.tradeVolumeAVAX * avaxPrice,
+            oneDayHistory?.tradeVolumeAVAX * avaxPrice ?? 0,
+            twoDayHistory?.tradeVolumeAVAX * avaxPrice ?? 0
           )
           const [oneDayTxns, txnChange] = get2DayPercentChange(data.txCount, oneDayHistory?.txCount ?? 0, twoDayHistory?.txCount ?? 0)
 
@@ -373,9 +373,9 @@ const getTokenData = async (address, avaxPrice, avaxPriceOld) => {
 
     // calculate percentage changes and daily changes
     const [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
-      data.tradeVolumeUSD * avaxPrice,
-      oneDayData?.tradeVolumeUSD * avaxPrice ?? 0,
-      twoDayData?.tradeVolumeUSD * avaxPrice ?? 0
+      data.tradeVolumeAVAX * avaxPrice,
+      oneDayData?.tradeVolumeAVAX * avaxPrice ?? 0,
+      twoDayData?.tradeVolumeAVAX * avaxPrice ?? 0
     )
 
     // calculate percentage changes and daily changes
@@ -694,13 +694,13 @@ export function useTokenTransactions(tokenAddress) {
   if (tokenTxns) {
     let txCopy = _.cloneDeep(tokenTxns)
     for (let i = 0; i < txCopy.mints.length; i++) {
-      txCopy.mints[i].amountUSD = (parseFloat(txCopy.mints[i].amountUSD) * avaxPrice).toString()
+      txCopy.mints[i].amountUSD = (parseFloat(txCopy.mints[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < txCopy.burns.length; i++) {
-      txCopy.burns[i].amountUSD = (parseFloat(txCopy.burns[i].amountUSD) * avaxPrice).toString()
+      txCopy.burns[i].amountUSD = (parseFloat(txCopy.burns[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < txCopy.swaps.length; i++) {
-      txCopy.swaps[i].amountUSD = (parseFloat(txCopy.swaps[i].amountUSD) * avaxPrice).toString()
+      txCopy.swaps[i].amountUSD = (parseFloat(txCopy.swaps[i].amountAVAX) * avaxPrice).toString()
     }
     return txCopy
   }

@@ -266,14 +266,14 @@ async function getBulkPairData(pairList, avaxPrice) {
 function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayBlock) {
   // get volume changes
   const [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
-    data?.volumeUSD * avaxPrice,
-    oneDayData?.volumeUSD ? oneDayData.volumeUSD * avaxPrice : 0,
-    twoDayData?.volumeUSD ? twoDayData.volumeUSD * avaxPrice : 0
+    data?.volumeAVAX * avaxPrice,
+    oneDayData?.volumeAVAX ? oneDayData.volumeAVAX * avaxPrice : 0,
+    twoDayData?.volumeAVAX ? twoDayData.volumeAVAX * avaxPrice : 0
   )
   const [oneDayVolumeUntracked, volumeChangeUntracked] = get2DayPercentChange(
-    data?.untrackedVolumeUSD * avaxPrice,
-    oneDayData?.untrackedVolumeUSD ? parseFloat(oneDayData?.untrackedVolumeUSD) * avaxPrice : 0,
-    twoDayData?.untrackedVolumeUSD ? twoDayData?.untrackedVolumeUSD * avaxPrice : 0
+    data?.untrackedVolumeUSD, // TODO: Update, replace with untrackedVolumeAVAX * avaxPrice
+    oneDayData?.untrackedVolumeUSD ? parseFloat(oneDayData?.untrackedVolumeUSD) : 0, // TODO: Update, replace with untrackedVolumeAVAX * avaxPrice
+    twoDayData?.untrackedVolumeUSD ? twoDayData?.untrackedVolumeUSD : 0 // TODO: Update, replace with untrackedVolumeAVAX * avaxPrice
   )
   const oneWeekVolumeUSD = parseFloat(oneWeekData ? (data?.volumeUSD - oneWeekData?.volumeUSD) * avaxPrice : data.volumeUSD * avaxPrice)
 
@@ -293,13 +293,13 @@ function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayB
 
   // format if pair hasnt existed for a day or a week
   if (!oneDayData && data && data.createdAtBlockNumber > oneDayBlock) {
-    data.oneDayVolumeUSD = parseFloat(data.volumeUSD)
+    data.oneDayVolumeUSD = parseFloat(data.volumeAVAX) * avaxPrice
   }
   if (!oneDayData && data) {
-    data.oneDayVolumeUSD = parseFloat(data.volumeUSD)
+    data.oneDayVolumeUSD = parseFloat(data.volumeAVAX) * avaxPrice
   }
   if (!oneWeekData && data) {
-    data.oneWeekVolumeUSD = parseFloat(data.volumeUSD)
+    data.oneWeekVolumeUSD = parseFloat(data.volumeAVAX) * avaxPrice
   }
 
   // format incorrect names

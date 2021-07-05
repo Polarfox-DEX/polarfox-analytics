@@ -182,13 +182,13 @@ export function useUserTransactions(account) {
   if (transactions) {
     let txCopy = _.cloneDeep(transactions)
     for (let i = 0; i < txCopy.mints.length; i++) {
-      txCopy.mints[i].amountUSD = (parseFloat(txCopy.mints[i].amountUSD) * avaxPrice).toString()
+      txCopy.mints[i].amountUSD = (parseFloat(txCopy.mints[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < txCopy.burns.length; i++) {
-      txCopy.burns[i].amountUSD = (parseFloat(txCopy.burns[i].amountUSD) * avaxPrice).toString()
+      txCopy.burns[i].amountUSD = (parseFloat(txCopy.burns[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < txCopy.swaps.length; i++) {
-      txCopy.swaps[i].amountUSD = (parseFloat(txCopy.swaps[i].amountUSD) * avaxPrice).toString()
+      txCopy.swaps[i].amountUSD = (parseFloat(txCopy.swaps[i].amountAVAX) * avaxPrice).toString()
     }
     //txCopy.converted = true
     return txCopy
@@ -475,6 +475,10 @@ export function useUserPositions(account) {
         if (result?.data?.liquidityPositions) {
           let formattedPositions = await Promise.all(
             result?.data?.liquidityPositions.map(async (positionData) => {
+              if (positionData.pair) {
+                // Set USD price
+                positionData.pair.reserveUSD = positionData.pair.reserveAVAX * avaxPrice ?? 0
+              }
               const returnData = await getLPReturnsOnPair(account, positionData.pair, avaxPrice, snapshots)
               return {
                 ...positionData,

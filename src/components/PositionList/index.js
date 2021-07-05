@@ -139,7 +139,7 @@ function PositionList({ positions, chainId }) {
 
   const ListItem = ({ position, index }) => {
     const poolOwnership = position.liquidityTokenBalance / position.pair.totalSupply
-    const valueUSD = poolOwnership * position.pair.reserveUSD * avaxPrice
+    const valueUSD = poolOwnership * position.pair.reserveUSD
 
     return (
       <DashGrid style={{ opacity: poolOwnership > 0 ? 1 : 0.6 }} focus={true}>
