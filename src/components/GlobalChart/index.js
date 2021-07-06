@@ -34,13 +34,6 @@ const GlobalChart = ({ display, chainId }) => {
     chainId
   )
 
-  console.log('totalLiquidityUSD:', totalLiquidityUSD)
-  console.log('oneDayVolumeUSD:', oneDayVolumeUSD)
-  console.log('volumeChangeUSD:', volumeChangeUSD)
-  console.log('liquidityChangeUSD:', liquidityChangeUSD)
-  console.log('oneWeekVolume:', oneWeekVolume)
-  console.log('weeklyVolumeChange:', weeklyVolumeChange)
-
   // based on window, get start time
   let utcStartTime = getTimeframe(timeWindow)
 

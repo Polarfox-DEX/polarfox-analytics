@@ -43,8 +43,6 @@ const TradingViewChart = ({ type = CHART_TYPES.BAR, data, base, baseChange, fiel
     }
   }, [chartCreated, data, dataPrev, type])
 
-  console.log('Trading view data:', data)
-
   // parse the data and format for trading view consumption
   const formattedData = data?.map((entry) => {
     return {

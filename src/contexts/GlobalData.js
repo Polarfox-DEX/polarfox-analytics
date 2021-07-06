@@ -212,8 +212,6 @@ async function getGlobalData(avaxPrice, oldAvaxPrice, chainId) {
       utcTwoWeeksBack
     ])
 
-    console.log('oneWeekBlock:', oneWeekBlock)
-
     // fetch the global data
     let result = await client.query({
       query: GLOBAL_DATA({ chainId: chainId }),
@@ -240,16 +238,11 @@ async function getGlobalData(avaxPrice, oldAvaxPrice, chainId) {
     })
     const oneWeekData = oneWeekResult.data.polarfoxFactories[0]
 
-    console.log('#2 - ChainId:', chainId)
-
     let twoWeekResult = await client.query({
       query: GLOBAL_DATA({ block: twoWeekBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     const twoWeekData = twoWeekResult.data.polarfoxFactories[0]
-
-    console.log('oneDayResult:', oneDayResult)
-    console.log('oneDayData:', oneDayData)
 
     if (data) {
       //if (data && oneDayData && twoDayData && twoWeekData) {
@@ -608,28 +601,18 @@ export function useGlobalData(chainId) {
 
   const data = state?.globalData
 
-  console.log('Data:', data)
-
   useEffect(() => {
     async function fetchData() {
-      console.log('Fetching data...')
       let globalData = await getGlobalData(avaxPrice, oldAvaxPrice, chainId)
-      console.log('Passed getGlobalData')
-      console.log('Got the global data:', globalData)
       globalData && update(globalData)
 
       let allPairs = await getAllPairsOnUniswap()
-      console.log('Passed getAllPairsOnUniswap')
       updateAllPairsInUniswap(allPairs)
 
       let allTokens = await getAllTokensOnUniswap()
-      console.log('Passed getAllTokensOnUniswap')
       updateAllTokensInUniswap(allTokens)
     }
-    console.log('AVAX price:', avaxPrice)
-    console.log('Old AVAX price:', oldAvaxPrice)
     if (!data && avaxPrice && oldAvaxPrice) {
-      console.log('Call to fetchData()')
       fetchData()
     }
   }, [avaxPrice, oldAvaxPrice, update, data, updateAllPairsInUniswap, updateAllTokensInUniswap, chainId])
@@ -668,16 +651,12 @@ export function useGlobalChartData() {
     async function fetchData() {
       // historical stuff for chart
       let [newChartData, newWeeklyData] = await getChartData(oldestDateFetch, avaxPrice)
-      console.log('New chart data:', newChartData)
       updateChart(newChartData, newWeeklyData)
     }
     if (oldestDateFetch && !(chartDataDaily && chartDataWeekly)) {
       fetchData()
     }
   }, [chartDataDaily, chartDataWeekly, oldestDateFetch, updateChart, avaxPrice])
-
-  console.log('Chart data daily:', chartDataDaily)
-  console.log('Chart data weekly:', chartDataWeekly)
 
   return [chartDataDaily, chartDataWeekly]
 }
