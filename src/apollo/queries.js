@@ -482,6 +482,7 @@ export const GLOBAL_TXNS = gql`
         liquidity
         amount0
         amount1
+        amountAVAX
         amountUSD
       }
       burns(orderBy: timestamp, orderDirection: desc) {
@@ -503,6 +504,7 @@ export const GLOBAL_TXNS = gql`
         liquidity
         amount0
         amount1
+        amountAVAX
         amountUSD
       }
       swaps(orderBy: timestamp, orderDirection: desc) {
@@ -524,6 +526,7 @@ export const GLOBAL_TXNS = gql`
         amount0Out
         amount1In
         amount1Out
+        amountAVAX
         amountUSD
         to
       }
@@ -823,6 +826,7 @@ export const FILTERED_TRANSACTIONS = gql`
       liquidity
       amount0
       amount1
+      amountAVAX
       amountUSD
     }
     burns(first: 20, where: { pair_in: $allPairs }, orderBy: timestamp, orderDirection: desc) {
@@ -844,6 +848,7 @@ export const FILTERED_TRANSACTIONS = gql`
       liquidity
       amount0
       amount1
+      amountAVAX
       amountUSD
     }
     swaps(first: 30, where: { pair_in: $allPairs }, orderBy: timestamp, orderDirection: desc) {
@@ -866,6 +871,7 @@ export const FILTERED_TRANSACTIONS = gql`
       amount0Out
       amount1In
       amount1Out
+      amountAVAX
       amountUSD
       to
     }
