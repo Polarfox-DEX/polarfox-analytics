@@ -401,7 +401,7 @@ export function useUserLiquidityChart(account) {
           }
         }
 
-        const relavantDayDatas = Object.keys(ownershipPerPair).map((pairAddress) => {
+        const relevantDayDatas = Object.keys(ownershipPerPair).map((pairAddress) => {
           // find last day data after timestamp update
           const dayDatasForThisPair = pairDayDatas.filter((dayData) => {
             return dayData.pairAddress === pairAddress
@@ -418,18 +418,19 @@ export function useUserLiquidityChart(account) {
         })
 
         // now cycle through pair day datas, for each one find usd value = ownership[address] * reserveUSD
-        const dailyUSD = relavantDayDatas.reduce((totalUSD, dayData) => {
-          return (totalUSD =
-            totalUSD +
-            (ownershipPerPair[dayData.pairAddress]
+        const dailyAVAX = relevantDayDatas.reduce((totalAVAX, dayData) => {
+          return (totalAVAX =
+            totalAVAX +
+            // eslint-disable-next-line eqeqeq
+            (ownershipPerPair[dayData.pairAddress] && dayData.totalSupply != 0
               ? (parseFloat(ownershipPerPair[dayData.pairAddress].lpTokenBalance) / parseFloat(dayData.totalSupply)) *
-                parseFloat(dayData.reserveUSD)
+                parseFloat(dayData.reserveAVAX)
               : 0))
         }, 0)
 
         formattedHistory.push({
           date: dayTimestamp,
-          valueUSD: dailyUSD
+          valueAVAX: dailyAVAX
         })
       }
 
@@ -441,7 +442,7 @@ export function useUserLiquidityChart(account) {
           } else {
             latestAvaxPrice = await getAvaxPriceAtDate(formattedHistory[j].date)
           }
-          formattedHistory[j].valueUSD = formattedHistory[j].valueUSD * latestAvaxPrice
+          formattedHistory[j].valueUSD = formattedHistory[j].valueAVAX * latestAvaxPrice
         }
       }
 

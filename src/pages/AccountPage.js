@@ -137,6 +137,9 @@ function AccountPage({ account, chainId }) {
   const positionValue = useMemo(() => {
     return dynamicPositions
       ? dynamicPositions.reduce((total, position) => {
+          // eslint-disable-next-line eqeqeq
+          if (position?.pair?.totalSupply == 0) return total
+
           return (
             total +
             (parseFloat(position?.liquidityTokenBalance) / parseFloat(position?.pair?.totalSupply)) *

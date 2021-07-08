@@ -100,12 +100,12 @@ export function getMetricsForPositionWindow(positionT0: Position, positionT1: Po
   positionT1 = formatPricesForEarlyTimestamps(positionT1)
 
   // calculate ownership at ends of window, for end of window we need original LP token balance / new total supply
-  // eslint-disable-next-line eqeqeq
   const t0Ownership =
-    positionT0.liquidityTokenTotalSupply !== 0 ? positionT0.liquidityTokenBalance / positionT0.liquidityTokenTotalSupply : 0
-  // eslint-disable-next-line eqeqeq
+    // eslint-disable-next-line eqeqeq
+    positionT0.liquidityTokenTotalSupply != 0 ? positionT0.liquidityTokenBalance / positionT0.liquidityTokenTotalSupply : 0
   const t1Ownership =
-    positionT1.liquidityTokenTotalSupply !== 0 ? positionT0.liquidityTokenBalance / positionT1.liquidityTokenTotalSupply : 0
+    // eslint-disable-next-line eqeqeq
+    positionT1.liquidityTokenTotalSupply != 0 ? positionT0.liquidityTokenBalance / positionT1.liquidityTokenTotalSupply : 0
 
   // get starting amounts of token0 and token1 deposited by LP
   const token0_amount_t0 = t0Ownership * positionT0.reserve0
@@ -124,9 +124,13 @@ export function getMetricsForPositionWindow(positionT0: Position, positionT1: Po
   const token1_amount_no_fees = Number(positionT1.token1PriceUSD) && priceRatioT1 ? sqrK_t0 / Math.sqrt(priceRatioT1) : 0
   const no_fees_usd = token0_amount_no_fees * positionT1.token0PriceUSD + token1_amount_no_fees * positionT1.token1PriceUSD
 
-  const difference_fees_token0 = token0_amount_t1 - token0_amount_no_fees
-  const difference_fees_token1 = token1_amount_t1 - token1_amount_no_fees
-  const difference_fees_usd = difference_fees_token0 * positionT1.token0PriceUSD + difference_fees_token1 * positionT1.token1PriceUSD
+  // eslint-disable-next-line eqeqeq
+  const difference_fees_token0 = token0_amount_t1 != 0 ? token0_amount_t1 - token0_amount_no_fees : 0
+  // eslint-disable-next-line eqeqeq
+  const difference_fees_token1 = token1_amount_t1 != 0 ? token1_amount_t1 - token1_amount_no_fees : 0
+  const difference_fees_usd_unchecked =
+    difference_fees_token0 * positionT1.token0PriceUSD + difference_fees_token1 * positionT1.token1PriceUSD
+  const difference_fees_usd = !Number.isNaN(difference_fees_usd_unchecked) ? difference_fees_usd_unchecked : 0
 
   // calculate USD value at t0 and t1 using initial token deposit amounts for asset return
   const assetValueT0 = token0_amount_t0 * positionT0.token0PriceUSD + token1_amount_t0 * positionT0.token1PriceUSD
