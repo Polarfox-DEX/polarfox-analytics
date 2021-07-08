@@ -33,13 +33,13 @@ const CHART_VIEW = {
   VOLUME: 'Volume',
   LIQUIDITY: 'Liquidity',
   PRICE: 'Price',
-  LINE_PRICE: 'Price (Line)',
+  LINE_PRICE: 'Price (Line)'
 }
 
 const DATA_FREQUENCY = {
   DAY: 'DAY',
   HOUR: 'HOUR',
-  LINE: 'LINE',
+  LINE: 'LINE'
 }
 
 const TokenChart = ({ address, color, base }) => {
@@ -182,38 +182,23 @@ const TokenChart = ({ address, color, base }) => {
                 >
                   D
                 </PriceOption>
-                <PriceOption
-                  active={frequency === DATA_FREQUENCY.HOUR}
-                  onClick={() => setFrequency(DATA_FREQUENCY.HOUR)}
-                >
+                <PriceOption active={frequency === DATA_FREQUENCY.HOUR} onClick={() => setFrequency(DATA_FREQUENCY.HOUR)}>
                   H
                 </PriceOption>
-                <PriceOption
-                  active={frequency === DATA_FREQUENCY.LINE}
-                  onClick={() => setFrequency(DATA_FREQUENCY.LINE)}
-                >
+                <PriceOption active={frequency === DATA_FREQUENCY.LINE} onClick={() => setFrequency(DATA_FREQUENCY.LINE)}>
                   <Activity size={14} />
                 </PriceOption>
               </AutoRow>
             )}
           </AutoColumn>
           <AutoRow justify="flex-end" gap="6px" align="flex-start">
-            <OptionButton
-              active={timeWindow === timeframeOptions.WEEK}
-              onClick={() => setTimeWindow(timeframeOptions.WEEK)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.WEEK} onClick={() => setTimeWindow(timeframeOptions.WEEK)}>
               1W
             </OptionButton>
-            <OptionButton
-              active={timeWindow === timeframeOptions.MONTH}
-              onClick={() => setTimeWindow(timeframeOptions.MONTH)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.MONTH} onClick={() => setTimeWindow(timeframeOptions.MONTH)}>
               1M
             </OptionButton>
-            <OptionButton
-              active={timeWindow === timeframeOptions.ALL_TIME}
-              onClick={() => setTimeWindow(timeframeOptions.ALL_TIME)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.ALL_TIME} onClick={() => setTimeWindow(timeframeOptions.ALL_TIME)}>
               All
             </OptionButton>
           </AutoRow>
@@ -260,7 +245,7 @@ const TokenChart = ({ address, color, base }) => {
                 padding: '10px 14px',
                 borderRadius: 10,
                 borderColor: color,
-                color: 'black',
+                color: 'black'
               }}
               wrapperStyle={{ top: -70, left: -10 }}
             />
@@ -321,7 +306,7 @@ const TokenChart = ({ address, color, base }) => {
                   padding: '10px 14px',
                   borderRadius: 10,
                   borderColor: color,
-                  color: 'black',
+                  color: 'black'
                 }}
                 wrapperStyle={{ top: -70, left: -10 }}
               />
@@ -383,19 +368,11 @@ const TokenChart = ({ address, color, base }) => {
                 padding: '10px 14px',
                 borderRadius: 10,
                 borderColor: color,
-                color: 'black',
+                color: 'black'
               }}
               wrapperStyle={{ top: -70, left: -10 }}
             />
-            <Bar
-              type="monotone"
-              name={'Volume'}
-              dataKey={'dailyVolumeUSD'}
-              fill={color}
-              opacity={'0.4'}
-              yAxisId={0}
-              stroke={color}
-            />
+            <Bar type="monotone" name={'Volume'} dataKey={'dailyVolumeUSD'} fill={color} opacity={'0.4'} yAxisId={0} stroke={color} />
           </BarChart>
         </ResponsiveContainer>
       )}

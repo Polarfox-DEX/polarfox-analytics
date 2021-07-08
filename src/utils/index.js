@@ -442,7 +442,7 @@ export function formattedPercent(percent, useBrackets = false) {
 }
 
 /**
- * gets the amoutn difference plus the % change in change itself (second order change)
+ * gets the amount difference plus the % change in change itself (second order change)
  * @param {*} valueNow
  * @param {*} value24HoursAgo
  * @param {*} value48HoursAgo

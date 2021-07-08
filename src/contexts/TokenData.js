@@ -593,12 +593,12 @@ const getTokenChartData = async (tokenAddress) => {
       // add the day index to the set of days
       dayIndexSet.add((data[i].date / oneDay).toFixed(0))
       dayIndexArray.push(data[i])
-      dayData.dailyVolumeUSD = parseFloat(dayData.dailyVolumeUSD)
+      dayData.dailyVolumeAVAX = parseFloat(dayData.dailyVolumeAVAX)
     })
 
     // fill in empty days
     let timestamp = data[0] && data[0].date ? data[0].date : startTime
-    let latestLiquidityUSD = data[0] && data[0].totalLiquidityUSD
+    let latestLiquidityAVAX = data[0] && data[0].totalLiquidityAVAX
     let latestPriceUSD = data[0] && data[0].priceUSD
     let index = 1
     while (timestamp < utcEndTime.startOf('minute').unix() - oneDay) {
@@ -608,12 +608,12 @@ const getTokenChartData = async (tokenAddress) => {
         data.push({
           date: nextDay,
           dayString: nextDay,
-          dailyVolumeUSD: 0,
+          dailyVolumeAVAX: 0,
           priceUSD: latestPriceUSD,
-          totalLiquidityUSD: latestLiquidityUSD
+          totalLiquidityAVAX: latestLiquidityAVAX
         })
       } else {
-        latestLiquidityUSD = dayIndexArray[index].totalLiquidityUSD
+        latestLiquidityAVAX = dayIndexArray[index].totalLiquidityAVAX
         latestPriceUSD = dayIndexArray[index].priceUSD
         index = index + 1
       }
@@ -628,9 +628,9 @@ const getTokenChartData = async (tokenAddress) => {
       } else {
         latestAvaxPrice = await getAvaxPriceAtDate(data[j].date)
       }
-      data[j].priceUSD = data[j].priceUSD * latestAvaxPrice
-      data[j].totalLiquidityUSD = data[j].totalLiquidityUSD * latestAvaxPrice
-      data[j].dailyVolumeUSD = data[j].dailyVolumeUSD * latestAvaxPrice
+      data[j].priceUSD = data[j].priceUSD // TODO: Replace with priceAVAX for now or keep priceUSD?
+      data[j].totalLiquidityUSD = data[j].totalLiquidityAVAX * latestAvaxPrice
+      data[j].dailyVolumeUSD = data[j].dailyVolumeAVAX * latestAvaxPrice
     }
   } catch (e) {
     console.log(e)
