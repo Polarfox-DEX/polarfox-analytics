@@ -127,7 +127,7 @@ function PairPage({ pairAddress, history, chainId }) {
   }, [])
 
   const transactions = usePairTransactions(pairAddress)
-  const backgroundColor = useColor(pairAddress)
+  const backgroundColor = useColor(token0?.id)
 
   // liquidity
   const liquidity = trackedReserveUSD ? formattedNum(trackedReserveUSD, true) : reserveUSD ? formattedNum(reserveUSD, true) : '-'
