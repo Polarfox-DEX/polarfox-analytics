@@ -393,7 +393,7 @@ export const formattedNum = (number, usd = false, acceptNegatives = false, decim
     }
   }
 
-  return Number(parseFloat(num).toFixed(5))
+  return Number(parseFloat(num).toFixed(decimals + 1))
 }
 
 export function rawPercent(percentRaw) {

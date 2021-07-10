@@ -27,6 +27,7 @@ import { Hover } from '../components'
 import { useAvaxPrice } from '../contexts/GlobalData'
 import Warning from '../components/Warning'
 import { usePathDismissed, useSavedPairs } from '../contexts/LocalStorage'
+import { CUSTOM_DECIMALS_TOKENS, DEFAULT_DECIMALS } from '../constants'
 
 import { Bookmark, PlusCircle } from 'react-feather'
 import FormattedName from '../components/FormattedName'
@@ -163,15 +164,25 @@ function PairPage({ pairAddress, history, chainId }) {
         : formattedNum(oneDayVolumeUSD * 0.003, true)
       : '-'
 
+  // Number of decimals to display
+  const decimalsToken0 = (CUSTOM_DECIMALS_TOKENS[chainId] && CUSTOM_DECIMALS_TOKENS[chainId][token0.id]) ?? DEFAULT_DECIMALS
+  const decimalsToken1 = (CUSTOM_DECIMALS_TOKENS[chainId] && CUSTOM_DECIMALS_TOKENS[chainId][token1.id]) ?? DEFAULT_DECIMALS
+
   // token data for usd
   const [avaxPrice] = useAvaxPrice()
-  const token0USD = token0?.derivedAVAX && avaxPrice ? formattedNum(parseFloat(token0.derivedAVAX) * parseFloat(avaxPrice), true) : ''
+  const token0USD =
+    token0?.derivedAVAX && avaxPrice
+      ? formattedNum(parseFloat(token0.derivedAVAX) * parseFloat(avaxPrice), true, false, decimalsToken0)
+      : ''
 
-  const token1USD = token1?.derivedAVAX && avaxPrice ? formattedNum(parseFloat(token1.derivedAVAX) * parseFloat(avaxPrice), true) : ''
+  const token1USD =
+    token1?.derivedAVAX && avaxPrice
+      ? formattedNum(parseFloat(token1.derivedAVAX) * parseFloat(avaxPrice), true, false, decimalsToken1)
+      : ''
 
   // rates
-  const token0Rate = reserve0 && reserve1 ? formattedNum(reserve1 / reserve0) : '-'
-  const token1Rate = reserve0 && reserve1 ? formattedNum(reserve0 / reserve1) : '-'
+  const token0Rate = reserve0 && reserve1 ? formattedNum(reserve1 / reserve0, false, false, decimalsToken0) : '-'
+  const token1Rate = reserve0 && reserve1 ? formattedNum(reserve0 / reserve1, false, false, decimalsToken1) : '-'
 
   // formatted symbols for overflow
   const formattedSymbol0 = token0?.symbol.length > 6 ? token0?.symbol.slice(0, 5) + '...' : token0?.symbol
@@ -399,7 +410,14 @@ function PairPage({ pairAddress, history, chainId }) {
                     gridRow: below1080 ? '' : '1/5'
                   }}
                 >
-                  <PairChart address={pairAddress} color={backgroundColor} base0={reserve1 / reserve0} base1={reserve0 / reserve1} />
+                  <PairChart
+                    address={pairAddress}
+                    color={backgroundColor}
+                    base0={reserve1 / reserve0}
+                    base1={reserve0 / reserve1}
+                    decimalsToken0={decimalsToken0}
+                    decimalsToken1={decimalsToken1}
+                  />
                 </Panel>
               </PanelWrapper>
               <TYPE.main fontSize={'1.125rem'} style={{ marginTop: '3rem' }}>

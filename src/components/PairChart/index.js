@@ -35,10 +35,10 @@ const CHART_VIEW = {
   VOLUME: 'Volume',
   LIQUIDITY: 'Liquidity',
   RATE0: 'Rate 0',
-  RATE1: 'Rate 1',
+  RATE1: 'Rate 1'
 }
 
-const PairChart = ({ address, color, base0, base1 }) => {
+const PairChart = ({ address, color, base0, base1, decimalsToken0, decimalsToken1 }) => {
   const [chartFilter, setChartFilter] = useState(CHART_VIEW.LIQUIDITY)
 
   const [timeWindow, setTimeWindow] = useState(timeframeOptions.MONTH)
@@ -71,10 +71,8 @@ const PairChart = ({ address, color, base0, base1 }) => {
   const hourlyRate1 = hourlyData && hourlyData[1]
 
   // formatted symbols for overflow
-  const formattedSymbol0 =
-    pairData?.token0?.symbol.length > 6 ? pairData?.token0?.symbol.slice(0, 5) + '...' : pairData?.token0?.symbol
-  const formattedSymbol1 =
-    pairData?.token1?.symbol.length > 6 ? pairData?.token1?.symbol.slice(0, 5) + '...' : pairData?.token1?.symbol
+  const formattedSymbol0 = pairData?.token0?.symbol.length > 6 ? pairData?.token0?.symbol.slice(0, 5) + '...' : pairData?.token0?.symbol
+  const formattedSymbol1 = pairData?.token1?.symbol.length > 6 ? pairData?.token1?.symbol.slice(0, 5) + '...' : pairData?.token1?.symbol
 
   const below1600 = useMedia('(max-width: 1600px)')
   const below1080 = useMedia('(max-width: 1080px)')
@@ -99,13 +97,13 @@ const PairChart = ({ address, color, base0, base1 }) => {
   function valueFormatter(val) {
     if (chartFilter === CHART_VIEW.RATE0) {
       return (
-        formattedNum(val) +
+        formattedNum(val, false, false, decimalsToken1) +
         `<span style="font-size: 12px; margin-left: 4px;">${formattedSymbol1}/${formattedSymbol0}<span>`
       )
     }
     if (chartFilter === CHART_VIEW.RATE1) {
       return (
-        formattedNum(val) +
+        formattedNum(val, false, false, decimalsToken0) +
         `<span style="font-size: 12px; margin-left: 4px;">${formattedSymbol0}/${formattedSymbol1}<span>`
       )
     }
@@ -161,22 +159,13 @@ const PairChart = ({ address, color, base0, base1 }) => {
             </OptionButton>
           </AutoRow>
           <AutoRow justify="flex-end" gap="6px">
-            <OptionButton
-              active={timeWindow === timeframeOptions.WEEK}
-              onClick={() => setTimeWindow(timeframeOptions.WEEK)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.WEEK} onClick={() => setTimeWindow(timeframeOptions.WEEK)}>
               1W
             </OptionButton>
-            <OptionButton
-              active={timeWindow === timeframeOptions.MONTH}
-              onClick={() => setTimeWindow(timeframeOptions.MONTH)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.MONTH} onClick={() => setTimeWindow(timeframeOptions.MONTH)}>
               1M
             </OptionButton>
-            <OptionButton
-              active={timeWindow === timeframeOptions.ALL_TIME}
-              onClick={() => setTimeWindow(timeframeOptions.ALL_TIME)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.ALL_TIME} onClick={() => setTimeWindow(timeframeOptions.ALL_TIME)}>
               All
             </OptionButton>
           </AutoRow>
@@ -224,7 +213,7 @@ const PairChart = ({ address, color, base0, base1 }) => {
                 padding: '10px 14px',
                 borderRadius: 10,
                 borderColor: color,
-                color: 'black',
+                color: 'black'
               }}
               wrapperStyle={{ top: -70, left: -10 }}
             />
@@ -245,13 +234,7 @@ const PairChart = ({ address, color, base0, base1 }) => {
       {chartFilter === CHART_VIEW.RATE1 &&
         (hourlyRate1 ? (
           <ResponsiveContainer aspect={aspect} ref={ref}>
-            <CandleStickChart
-              data={hourlyRate1}
-              base={base0}
-              margin={false}
-              width={width}
-              valueFormatter={valueFormatter}
-            />
+            <CandleStickChart data={hourlyRate1} base={base0} margin={false} width={width} valueFormatter={valueFormatter} />
           </ResponsiveContainer>
         ) : (
           <LocalLoader />
@@ -260,13 +243,7 @@ const PairChart = ({ address, color, base0, base1 }) => {
       {chartFilter === CHART_VIEW.RATE0 &&
         (hourlyRate0 ? (
           <ResponsiveContainer aspect={aspect} ref={ref}>
-            <CandleStickChart
-              data={hourlyRate0}
-              base={base1}
-              margin={false}
-              width={width}
-              valueFormatter={valueFormatter}
-            />
+            <CandleStickChart data={hourlyRate0} base={base1} margin={false} width={width} valueFormatter={valueFormatter} />
           </ResponsiveContainer>
         ) : (
           <LocalLoader />
@@ -274,11 +251,7 @@ const PairChart = ({ address, color, base0, base1 }) => {
 
       {chartFilter === CHART_VIEW.VOLUME && (
         <ResponsiveContainer aspect={aspect}>
-          <BarChart
-            margin={{ top: 0, right: 0, bottom: 6, left: below1080 ? 0 : 10 }}
-            barCategoryGap={1}
-            data={chartData}
-          >
+          <BarChart margin={{ top: 0, right: 0, bottom: 6, left: below1080 ? 0 : 10 }} barCategoryGap={1} data={chartData}>
             <XAxis
               tickLine={false}
               axisLine={false}
@@ -312,19 +285,11 @@ const PairChart = ({ address, color, base0, base1 }) => {
                 padding: '10px 14px',
                 borderRadius: 10,
                 borderColor: color,
-                color: 'black',
+                color: 'black'
               }}
               wrapperStyle={{ top: -70, left: -10 }}
             />
-            <Bar
-              type="monotone"
-              name={'Volume'}
-              dataKey={'dailyVolumeUSD'}
-              fill={color}
-              opacity={'0.4'}
-              yAxisId={0}
-              stroke={color}
-            />
+            <Bar type="monotone" name={'Volume'} dataKey={'dailyVolumeUSD'} fill={color} opacity={'0.4'} yAxisId={0} stroke={color} />
           </BarChart>
         </ResponsiveContainer>
       )}
