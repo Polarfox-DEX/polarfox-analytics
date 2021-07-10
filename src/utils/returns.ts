@@ -25,7 +25,6 @@ interface Position {
   token1PriceUSD: number
 }
 
-// TODO: Update the below, make it depend on the chainId
 const PRICE_DISCOVERY_START_TIMESTAMP = 1589747086
 
 function formatPricesForEarlyTimestamps(position): Position {
