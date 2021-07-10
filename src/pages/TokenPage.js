@@ -30,6 +30,7 @@ import { Hover, PageWrapper, ContentWrapper, StyledIcon } from '../components'
 import { PlusCircle, Bookmark } from 'react-feather'
 import FormattedName from '../components/FormattedName'
 import { useListedTokens } from '../contexts/Application'
+import { DEFAULT_DECIMALS, CUSTOM_DECIMALS_TOKENS } from '../constants'
 
 const DashboardWrapper = styled.div`
   width: 100%;
@@ -120,8 +121,11 @@ function TokenPage({ address, history, chainId }) {
   // all transactions with this token
   const transactions = useTokenTransactions(address)
 
+  // Number of decimals to display
+  const decimals = (CUSTOM_DECIMALS_TOKENS[chainId] && CUSTOM_DECIMALS_TOKENS[chainId][address]) ?? DEFAULT_DECIMALS
+
   // price
-  const price = priceUSD ? formattedNum(priceUSD, true) : ''
+  const price = priceUSD ? formattedNum(priceUSD, true, false, decimals) : ''
   const priceChange = priceChangeUSD ? formattedPercent(priceChangeUSD) : ''
 
   // volume
@@ -321,7 +325,7 @@ function TokenPage({ address, history, chainId }) {
                     gridRow: below1080 ? '' : '1/4'
                   }}
                 >
-                  <TokenChart address={address} color={backgroundColor} base={priceUSD} />
+                  <TokenChart address={address} color={backgroundColor} base={priceUSD} chainId={chainId} />
                 </Panel>
               </PanelWrapper>
             </>

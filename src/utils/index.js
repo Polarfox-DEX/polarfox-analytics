@@ -356,7 +356,7 @@ export const toSignificant = (number, significantDigits) => {
   return updated.toFormat(updated.decimalPlaces(), { groupSeparator: '' })
 }
 
-export const formattedNum = (number, usd = false, acceptNegatives = false) => {
+export const formattedNum = (number, usd = false, acceptNegatives = false, decimals = 4) => {
   if (isNaN(number) || number === '' || number === undefined) {
     return usd ? '$0' : 0
   }
@@ -373,8 +373,11 @@ export const formattedNum = (number, usd = false, acceptNegatives = false) => {
     return 0
   }
 
-  if (num < 0.0001 && num > 0) {
-    return usd ? '< $0.0001' : '< 0.0001'
+  // See if number is under the minimum allowed by the given amount of decimals
+  const minimum = decimals > 0 ? '0.' + new Array(decimals).join('0') + '1' : '1'
+
+  if (num < parseFloat(minimum) && num > 0) {
+    return usd ? `< $${minimum}` : `< ${minimum}`
   }
 
   if (num > 1000) {
@@ -383,7 +386,7 @@ export const formattedNum = (number, usd = false, acceptNegatives = false) => {
 
   if (usd) {
     if (num < 0.1) {
-      return '$' + Number(parseFloat(num).toFixed(4))
+      return '$' + Number(parseFloat(num).toFixed(decimals))
     } else {
       let usdString = priceFormatter.format(num)
       return '$' + usdString.slice(1, usdString.length)

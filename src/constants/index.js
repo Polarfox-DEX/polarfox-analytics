@@ -58,3 +58,15 @@ export const FEE_WARNING_TOKENS = {
   [CHAIN_ID.AVALANCHE]: [],
   [CHAIN_ID.FUJI]: []
 }
+
+// Default number of decimals to display on prices
+export const DEFAULT_DECIMALS = 4
+
+// Tokens whose price should be displayed with a custom number of decimals
+// Lower case
+export const CUSTOM_DECIMALS_TOKENS = {
+  [CHAIN_ID.AVALANCHE]: [],
+  [CHAIN_ID.FUJI]: {
+    '0xff2ebd79c0948c8fe69b96434915abc03ebb5c37': 10 // Akita Inu
+  }
+}

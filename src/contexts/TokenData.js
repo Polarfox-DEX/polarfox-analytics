@@ -628,7 +628,7 @@ const getTokenChartData = async (tokenAddress) => {
       } else {
         latestAvaxPrice = await getAvaxPriceAtDate(data[j].date)
       }
-      data[j].priceUSD = data[j].priceUSD // TODO: Replace with priceAVAX for now or keep priceUSD?
+      // data[j].priceUSD = data[j].priceUSD // TODO: Replace with priceAVAX for now or keep priceUSD?
       data[j].totalLiquidityUSD = data[j].totalLiquidityAVAX * latestAvaxPrice
       data[j].dailyVolumeUSD = data[j].dailyVolumeAVAX * latestAvaxPrice
     }

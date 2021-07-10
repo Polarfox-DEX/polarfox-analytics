@@ -15,6 +15,7 @@ import LocalLoader from '../LocalLoader'
 import { AutoColumn } from '../Column'
 import { Activity } from 'react-feather'
 import { useDarkModeManager } from '../../contexts/LocalStorage'
+import { CUSTOM_DECIMALS_TOKENS, DEFAULT_DECIMALS } from '../../constants'
 
 const ChartWrapper = styled.div`
   height: 100%;
@@ -42,7 +43,7 @@ const DATA_FREQUENCY = {
   LINE: 'LINE'
 }
 
-const TokenChart = ({ address, color, base }) => {
+const TokenChart = ({ address, color, base, chainId }) => {
   // settings for the window and candle width
   const [chartFilter, setChartFilter] = useState(CHART_VIEW.PRICE)
   const [frequency, setFrequency] = useState(DATA_FREQUENCY.HOUR)
@@ -112,6 +113,9 @@ const TokenChart = ({ address, color, base }) => {
   const aspect = below1080 ? 60 / 32 : below600 ? 60 / 42 : 60 / 22
 
   chartData = chartData?.filter((entry) => entry.date >= utcStartTime)
+
+  // Number of decimals to display
+  const decimals = (CUSTOM_DECIMALS_TOKENS[chainId] && CUSTOM_DECIMALS_TOKENS[chainId][address]) ?? DEFAULT_DECIMALS
 
   // update the width on a window resize
   const ref = useRef()
@@ -326,7 +330,12 @@ const TokenChart = ({ address, color, base }) => {
           </ResponsiveContainer>
         ) : priceData ? (
           <ResponsiveContainer aspect={aspect} ref={ref}>
-            <CandleStickChart data={priceData} width={width} base={base} />
+            <CandleStickChart
+              data={priceData}
+              width={width}
+              base={base}
+              valueFormatter={(val) => formattedNum(val, true, false, decimals)}
+            />
           </ResponsiveContainer>
         ) : (
           <LocalLoader />
