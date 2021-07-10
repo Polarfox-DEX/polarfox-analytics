@@ -5,11 +5,10 @@ import { hex } from 'wcag-contrast'
 import { isAddress } from '../utils'
 import copy from 'copy-to-clipboard'
 
-export function useColor(tokenAddress, token) {
+export function useColor(tokenAddress, chainId) {
   const [color, setColor] = useState('#2172E5')
   if (tokenAddress) {
-    // TODO: This should depend on the chainId
-    const path = `https://raw.githubusercontent.com/Polarfox-DEX/polarfox-token-lists/master/43113/token-logos/${isAddress(
+    const path = `https://raw.githubusercontent.com/Polarfox-DEX/polarfox-token-lists/master/${chainId}/token-logos/${isAddress(
       tokenAddress
     )}.png`
     if (path) {

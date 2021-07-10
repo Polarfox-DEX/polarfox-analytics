@@ -34,14 +34,14 @@ const CHART_VIEW = {
   FEES: 'Fees'
 }
 
-const PairReturnsChart = ({ account, position }) => {
+const PairReturnsChart = ({ account, position, chainId }) => {
   let data = useUserPositionChart(position, account)
 
   const [timeWindow, setTimeWindow] = useTimeframe()
 
   const below600 = useMedia('(max-width: 600px)')
 
-  const color = useColor(position?.pair.token0.id)
+  const color = useColor(position?.pair.token0.id, chainId)
 
   const [chartView, setChartView] = useState(CHART_VIEW.VALUE)
 

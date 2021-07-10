@@ -296,7 +296,7 @@ function AccountPage({ account, chainId }) {
             <PanelWrapper>
               <Panel style={{ gridColumn: '1' }}>
                 {activePosition ? (
-                  <PairReturnsChart account={account} position={activePosition} />
+                  <PairReturnsChart account={account} position={activePosition} chainId={chainId} />
                 ) : (
                   <UserChart account={account} position={activePosition} />
                 )}

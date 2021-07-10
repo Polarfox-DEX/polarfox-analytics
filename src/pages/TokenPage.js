@@ -111,7 +111,7 @@ function TokenPage({ address, history, chainId }) {
   }, [])
 
   // detect color from token
-  const backgroundColor = useColor(id, symbol)
+  const backgroundColor = useColor(id, chainId)
 
   const allPairs = useTokenPairs(address)
 
