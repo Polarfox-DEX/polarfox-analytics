@@ -377,7 +377,8 @@ export const formattedNum = (number, usd = false, acceptNegatives = false, decim
   const minimum = decimals > 0 ? '0.' + new Array(decimals).join('0') + '1' : '1'
 
   if (num < parseFloat(minimum) && num > 0) {
-    return usd ? `< $${minimum}` : `< ${minimum}`
+    return usd ? `$${num.toExponential(2)}` : `${num.toExponential(2)}`
+    // return usd ? `< $${minimum}` : `< ${minimum}`
   }
 
   if (num > 1000) {
