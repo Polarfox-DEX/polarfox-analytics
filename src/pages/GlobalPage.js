@@ -142,7 +142,7 @@ function GlobalPage({ chainId, setChainId }) {
             </RowBetween>
           </ListOptions>
           <Panel style={{ marginTop: '6px', padding: '1.125rem 0 ' }}>
-            <PairList pairs={allPairs} />
+            <PairList pairs={allPairs} chainId={chainId} />
           </Panel>
 
           <span>

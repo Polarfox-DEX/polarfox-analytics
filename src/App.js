@@ -79,14 +79,14 @@ const WarningBanner = styled.div`
 /**
  * Wrap the component with the header and sidebar pinned tab
  */
-const LayoutWrapper = ({ children, savedOpen, setSavedOpen }) => {
+const LayoutWrapper = ({ children, savedOpen, setSavedOpen, chainId }) => {
   return (
     <>
       <ContentWrapper open={savedOpen}>
         <SideNav />
         <Center id="center">{children}</Center>
         <Right open={savedOpen}>
-          <PinnedData open={savedOpen} setSavedOpen={setSavedOpen} />
+          <PinnedData open={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId} />
         </Right>
       </ContentWrapper>
     </>
@@ -130,7 +130,7 @@ function App() {
                   }
                   if (isAddress(match.params.tokenAddress.toLowerCase())) {
                     return (
-                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
                         <TokenPage address={match.params.tokenAddress.toLowerCase()} chainId={chainId} />
                       </LayoutWrapper>
                     )
@@ -149,7 +149,7 @@ function App() {
                   }
                   if (isAddress(match.params.pairAddress.toLowerCase())) {
                     return (
-                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
                         <PairPage pairAddress={match.params.pairAddress.toLowerCase()} chainId={chainId} />
                       </LayoutWrapper>
                     )
@@ -165,7 +165,7 @@ function App() {
                 render={({ match }) => {
                   if (isAddress(match.params.accountAddress.toLowerCase())) {
                     return (
-                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
                         <AccountPage account={match.params.accountAddress.toLowerCase()} chainId={chainId} />
                       </LayoutWrapper>
                     )
@@ -176,25 +176,25 @@ function App() {
               />
 
               <Route path="/home">
-                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
                   <GlobalPage chainId={chainId} setChainId={setChainId} />
                 </LayoutWrapper>
               </Route>
 
               <Route path="/tokens">
-                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
                   <AllTokensPage chainId={chainId} />
                 </LayoutWrapper>
               </Route>
 
               <Route path="/pairs">
-                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
                   <AllPairsPage chainId={chainId} />
                 </LayoutWrapper>
               </Route>
 
               <Route path="/accounts">
-                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
                   <AccountLookup chainId={chainId} />
                 </LayoutWrapper>
               </Route>

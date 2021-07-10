@@ -210,7 +210,7 @@ function AccountPage({ account, chainId }) {
                 )}
                 {activePosition && (
                   <RowFixed>
-                    <DoubleTokenLogo a0={activePosition.pair.token0.id} a1={activePosition.pair.token1.id} size={16} />
+                    <DoubleTokenLogo a0={activePosition.pair.token0.id} a1={activePosition.pair.token1.id} size={16} chainId={chainId} />
                     <TYPE.body ml={'16px'}>
                       {activePosition.pair.token0.symbol}-{activePosition.pair.token1.symbol} Position
                     </TYPE.body>
@@ -236,7 +236,7 @@ function AccountPage({ account, chainId }) {
                             }}
                             key={i}
                           >
-                            <DoubleTokenLogo a0={p.pair.token0.id} a1={p.pair.token1.id} size={16} />
+                            <DoubleTokenLogo a0={p.pair.token0.id} a1={p.pair.token1.id} size={16} chainId={chainId} />
                             <TYPE.body ml={'16px'}>
                               {p.pair.token0.symbol}-{p.pair.token1.symbol} Position
                             </TYPE.body>

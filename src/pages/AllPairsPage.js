@@ -27,7 +27,7 @@ function AllPairsPage({ chainId }) {
           {!below800 && <Search small={true} chainId={chainId} />}
         </RowBetween>
         <Panel style={{ padding: below800 && '1rem 0 0 0 ' }}>
-          <PairList pairs={allPairs} disbaleLinks={true} maxItems={50} />
+          <PairList pairs={allPairs} disbaleLinks={true} maxItems={50} chainId={chainId} />
         </Panel>
       </FullWrapper>
     </PageWrapper>

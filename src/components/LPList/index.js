@@ -75,7 +75,7 @@ const DataText = styled(Flex)`
   }
 `
 
-function LPList({ lps, disbaleLinks, maxItems = 10 }) {
+function LPList({ lps, disbaleLinks, maxItems = 10, chainId }) {
   const below600 = useMedia('(max-width: 600px)')
   const below800 = useMedia('(max-width: 800px)')
 
@@ -122,7 +122,7 @@ function LPList({ lps, disbaleLinks, maxItems = 10 }) {
         <DataText>
           <CustomLink area="pair" to={'/pair/' + lp.pairAddress}>
             <RowFixed>
-              {!below600 && <DoubleTokenLogo a0={lp.token0} a1={lp.token1} size={16} margin={true} />}
+              {!below600 && <DoubleTokenLogo a0={lp.token0} a1={lp.token1} size={16} margin={true} chainId={chainId} />}
               {lp.pairName}
             </RowFixed>
           </CustomLink>

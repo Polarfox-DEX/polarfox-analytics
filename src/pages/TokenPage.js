@@ -213,7 +213,7 @@ function TokenPage({ address, history, chainId }) {
             >
               <RowFixed style={{ flexWrap: 'wrap' }}>
                 <RowFixed style={{ alignItems: 'baseline' }}>
-                  <TokenLogo address={address} size="32px" style={{ alignSelf: 'center' }} />
+                  <TokenLogo address={address} size="32px" style={{ alignSelf: 'center' }} chainId={chainId} />
                   <TYPE.main fontSize={below1080 ? '1.5rem' : '2rem'} fontWeight={500} style={{ margin: '0 1rem' }}>
                     <RowFixed gap="6px">
                       <FormattedName text={name ? name + ' ' : ''} maxCharacters={16} style={{ marginRight: '6px' }} />{' '}
@@ -342,7 +342,11 @@ function TokenPage({ address, history, chainId }) {
                 padding: '1.125rem 0 '
               }}
             >
-              {address && fetchedPairsList ? <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} /> : <Loader />}
+              {address && fetchedPairsList ? (
+                <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} chainId={chainId} />
+              ) : (
+                <Loader />
+              )}
             </Panel>
             <RowBetween mt={40} mb={'1rem'}>
               <TYPE.main fontSize={'1.125rem'}>Transactions</TYPE.main> <div />

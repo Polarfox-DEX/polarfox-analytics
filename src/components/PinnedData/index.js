@@ -47,7 +47,7 @@ const StyledIcon = styled.div`
   color: ${({ theme }) => theme.text2};
 `
 
-function PinnedData({ history, open, setSavedOpen }) {
+function PinnedData({ history, open, setSavedOpen, chainId }) {
   const [savedPairs, , removePair] = useSavedPairs()
   const [savedTokens, , removeToken] = useSavedTokens()
 
@@ -90,11 +90,7 @@ function PinnedData({ history, open, setSavedOpen }) {
                     <ButtonFaded onClick={() => history.push('/pair/' + address)}>
                       <RowFixed>
                         <TYPE.header>
-                          <FormattedName
-                            text={pair.token0Symbol + '/' + pair.token1Symbol}
-                            maxCharacters={12}
-                            fontSize={'12px'}
-                          />
+                          <FormattedName text={pair.token0Symbol + '/' + pair.token1Symbol} maxCharacters={12} fontSize={'12px'} />
                         </TYPE.header>
                       </RowFixed>
                     </ButtonFaded>
@@ -125,7 +121,7 @@ function PinnedData({ history, open, setSavedOpen }) {
                   <RowBetween key={address}>
                     <ButtonFaded onClick={() => history.push('/token/' + address)}>
                       <RowFixed>
-                        <TokenLogo address={address} size={'14px'} />
+                        <TokenLogo address={address} size={'14px'} chainId={chainId} />
                         <TYPE.header ml={'6px'}>
                           <FormattedName text={token.symbol} maxCharacters={12} fontSize={'12px'} />
                         </TYPE.header>

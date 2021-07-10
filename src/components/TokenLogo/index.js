@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { isAddress } from '../../utils/index.js'
 import PlaceHolder from '../../assets/placeholder.png'
 import EthereumLogo from '../../assets/eth.png'
+import { CHAIN_ID } from '../../constants/index.js'
 
 const BAD_IMAGES = {}
 
@@ -31,7 +32,7 @@ const StyledEthereumLogo = styled.div`
   }
 `
 
-export default function TokenLogo({ address, header = false, size = '24px', ...rest }) {
+export default function TokenLogo({ address, header = false, size = '24px', chainId, ...rest }) {
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -46,8 +47,7 @@ export default function TokenLogo({ address, header = false, size = '24px', ...r
     )
   }
 
-  // TODO: This should depend on the chainId
-  const path = `https://raw.githubusercontent.com/Polarfox-DEX/polarfox-token-lists/master/43113/token-logos/${isAddress(address)}.png`
+  const path = `https://raw.githubusercontent.com/Polarfox-DEX/polarfox-token-lists/master/${chainId}/token-logos/${isAddress(address)}.png`
 
   return (
     <Inline>
