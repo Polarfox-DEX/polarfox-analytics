@@ -8,6 +8,7 @@ import { GLOBAL_DATA, GLOBAL_TXNS, GLOBAL_CHART, ALL_PAIRS, ALL_TOKENS, TOP_LPS_
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import { useAllPairData } from './PairData'
 import CoinGecko from 'coingecko-api'
+import { useChainId } from './Application'
 const UPDATE = 'UPDATE'
 const UPDATE_TXNS = 'UPDATE_TXNS'
 const UPDATE_CHART = 'UPDATE_CHART'
@@ -205,40 +206,38 @@ async function getGlobalData(avaxPrice, oldAvaxPrice, chainId) {
     const utcTwoWeeksBack = utcCurrentTime.subtract(2, 'week').unix()
 
     // get the blocks needed for time travel queries
-    let [oneDayBlock, twoDayBlock, oneWeekBlock, twoWeekBlock] = await getBlocksFromTimestamps([
-      utcOneDayBack,
-      utcTwoDaysBack,
-      utcOneWeekBack,
-      utcTwoWeeksBack
-    ])
+    let [oneDayBlock, twoDayBlock, oneWeekBlock, twoWeekBlock] = await getBlocksFromTimestamps(
+      [utcOneDayBack, utcTwoDaysBack, utcOneWeekBack, utcTwoWeeksBack],
+      chainId
+    )
 
     // fetch the global data
-    let result = await client.query({
+    let result = await client(chainId).query({
       query: GLOBAL_DATA({ chainId: chainId }),
       fetchPolicy: 'cache-first'
     })
     data = result.data.polarfoxFactories[0]
 
     // fetch the historical data
-    let oneDayResult = await client.query({
+    let oneDayResult = await client(chainId).query({
       query: GLOBAL_DATA({ block: oneDayBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     oneDayData = oneDayResult.data.polarfoxFactories[0]
 
-    let twoDayResult = await client.query({
+    let twoDayResult = await client(chainId).query({
       query: GLOBAL_DATA({ block: twoDayBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     twoDayData = twoDayResult.data.polarfoxFactories[0]
 
-    let oneWeekResult = await client.query({
+    let oneWeekResult = await client(chainId).query({
       query: GLOBAL_DATA({ block: oneWeekBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     const oneWeekData = oneWeekResult.data.polarfoxFactories[0]
 
-    let twoWeekResult = await client.query({
+    let twoWeekResult = await client(chainId).query({
       query: GLOBAL_DATA({ block: twoWeekBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
@@ -321,7 +320,7 @@ async function getGlobalData(avaxPrice, oldAvaxPrice, chainId) {
  * on main page
  * @param {*} oldestDateToFetch // start of window to fetch from
  */
-const getChartData = async (oldestDateToFetch, avaxPrice) => {
+const getChartData = async (oldestDateToFetch, avaxPrice, chainId) => {
   let data = []
   let weeklyData = []
   const utcEndTime = dayjs.utc()
@@ -330,7 +329,7 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
 
   try {
     while (!allFound) {
-      let result = await client.query({
+      let result = await client(chainId).query({
         query: GLOBAL_CHART,
         variables: {
           startTime: oldestDateToFetch,
@@ -414,13 +413,13 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
 /**
  * Get and format transactions for global page
  */
-const getGlobalTransactions = async () => {
+const getGlobalTransactions = async (chainId) => {
   let transactions = {}
 
   try {
     let avaxPrice = await getCurrentAvaxPrice()
 
-    let result = await client.query({
+    let result = await client(chainId).query({
       query: GLOBAL_TXNS,
       fetchPolicy: 'cache-first'
     })
@@ -539,13 +538,13 @@ const TOKENS_TO_FETCH = 500
 /**
  * Loop through every pair on uniswap, used for search
  */
-async function getAllPairsOnUniswap() {
+async function getAllPairsOnUniswap(chainId) {
   try {
     let allFound = false
     let pairs = []
     let skipCount = 0
     while (!allFound) {
-      let result = await client.query({
+      let result = await client(chainId).query({
         query: ALL_PAIRS,
         variables: {
           skip: skipCount
@@ -567,13 +566,13 @@ async function getAllPairsOnUniswap() {
 /**
  * Loop through every token on uniswap, used for search
  */
-async function getAllTokensOnUniswap() {
+async function getAllTokensOnUniswap(chainId) {
   try {
     let allFound = false
     let skipCount = 0
     let tokens = []
     while (!allFound) {
-      let result = await client.query({
+      let result = await client(chainId).query({
         query: ALL_TOKENS,
         variables: {
           skip: skipCount
@@ -595,7 +594,8 @@ async function getAllTokensOnUniswap() {
 /**
  * Hook that fetches overview data, plus all tokens and pairs for search
  */
-export function useGlobalData(chainId) {
+export function useGlobalData() {
+  const { chainId } = useChainId()
   const [state, { update, updateAllPairsInUniswap, updateAllTokensInUniswap }] = useGlobalDataContext()
   const [avaxPrice, oldAvaxPrice] = useAvaxPrice()
 
@@ -606,10 +606,10 @@ export function useGlobalData(chainId) {
       let globalData = await getGlobalData(avaxPrice, oldAvaxPrice, chainId)
       globalData && update(globalData)
 
-      let allPairs = await getAllPairsOnUniswap()
+      let allPairs = await getAllPairsOnUniswap(chainId)
       updateAllPairsInUniswap(allPairs)
 
-      let allTokens = await getAllTokensOnUniswap()
+      let allTokens = await getAllTokensOnUniswap(chainId)
       updateAllTokensInUniswap(allTokens)
     }
     if (!data && avaxPrice && oldAvaxPrice) {
@@ -621,6 +621,7 @@ export function useGlobalData(chainId) {
 }
 
 export function useGlobalChartData() {
+  const { chainId } = useChainId()
   const [state, { updateChart }] = useGlobalDataContext()
   const [oldestDateFetch, setOldestDateFetched] = useState()
   const [activeWindow] = useTimeframe()
@@ -650,29 +651,30 @@ export function useGlobalChartData() {
   useEffect(() => {
     async function fetchData() {
       // historical stuff for chart
-      let [newChartData, newWeeklyData] = await getChartData(oldestDateFetch, avaxPrice)
+      let [newChartData, newWeeklyData] = await getChartData(oldestDateFetch, avaxPrice, chainId)
       updateChart(newChartData, newWeeklyData)
     }
     if (oldestDateFetch && !(chartDataDaily && chartDataWeekly)) {
       fetchData()
     }
-  }, [chartDataDaily, chartDataWeekly, oldestDateFetch, updateChart, avaxPrice])
+  }, [chartDataDaily, chartDataWeekly, oldestDateFetch, updateChart, avaxPrice, chainId])
 
   return [chartDataDaily, chartDataWeekly]
 }
 
 export function useGlobalTransactions() {
+  const { chainId } = useChainId()
   const [state, { updateTransactions }] = useGlobalDataContext()
   const transactions = state?.transactions
   useEffect(() => {
     async function fetchData() {
       if (!transactions) {
-        let txns = await getGlobalTransactions()
+        let txns = await getGlobalTransactions(chainId)
         updateTransactions(txns)
       }
     }
     fetchData()
-  }, [updateTransactions, transactions])
+  }, [updateTransactions, transactions, chainId])
   return transactions
 }
 
@@ -712,6 +714,7 @@ export function useAllTokensInUniswap() {
  * @TODO Not a perfect lookup needs improvement
  */
 export function useTopLps() {
+  const { chainId } = useChainId()
   const [state, { updateTopLps }] = useGlobalDataContext()
   let topLps = state?.topLps
 
@@ -731,7 +734,7 @@ export function useTopLps() {
         topPairs.map(async (pair) => {
           // for each one, fetch top LPs
           try {
-            const { data: results } = await client.query({
+            const { data: results } = await client(chainId).query({
               query: TOP_LPS_PER_PAIRS,
               variables: {
                 pair: pair.toString()

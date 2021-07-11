@@ -10,7 +10,7 @@ import { RowBetween } from '../components/Row'
 import Search from '../components/Search'
 import { useMedia } from 'react-use'
 
-function AllTokensPage({ chainId }) {
+function AllTokensPage() {
   const allTokens = useAllTokenData()
 
   useEffect(() => {
@@ -24,10 +24,10 @@ function AllTokensPage({ chainId }) {
       <FullWrapper>
         <RowBetween>
           <TYPE.largeHeader>Top Tokens</TYPE.largeHeader>
-          {!below600 && <Search small={true} chainId={chainId} />}
+          {!below600 && <Search small={true} />}
         </RowBetween>
         <Panel style={{ marginTop: '6px', padding: below600 && '1rem 0 0 0 ' }}>
-          <TopTokenList tokens={allTokens} itemMax={50} chainId={chainId} />
+          <TopTokenList tokens={allTokens} itemMax={50} />
         </Panel>
       </FullWrapper>
     </PageWrapper>

@@ -20,6 +20,7 @@ import { BasicLink } from '../components/Link'
 import { useMedia } from 'react-use'
 import Search from '../components/Search'
 import { useAvaxPrice } from '../contexts/GlobalData'
+import { useChainId } from '../contexts/Application'
 import Markr from '../assets/markr.png'
 
 const AccountWrapper = styled.div`
@@ -88,7 +89,9 @@ const Warning = styled.div`
   width: calc(100% - 2rem);
 `
 
-function AccountPage({ account, chainId }) {
+function AccountPage({ account }) {
+  const { chainId } = useChainId()
+
   // get data for this account
   const transactions = useUserTransactions(account)
   const positions = useUserPositions(account)
@@ -170,7 +173,7 @@ function AccountPage({ account, chainId }) {
               {account?.slice(0, 42)}{' '}
             </Link>
           </TYPE.body>
-          {!below600 && <Search small={true} chainId={chainId} />}
+          {!below600 && <Search small={true} />}
         </RowBetween>
         <Header>
           <RowBetween>
@@ -210,7 +213,7 @@ function AccountPage({ account, chainId }) {
                 )}
                 {activePosition && (
                   <RowFixed>
-                    <DoubleTokenLogo a0={activePosition.pair.token0.id} a1={activePosition.pair.token1.id} size={16} chainId={chainId} />
+                    <DoubleTokenLogo a0={activePosition.pair.token0.id} a1={activePosition.pair.token1.id} size={16} />
                     <TYPE.body ml={'16px'}>
                       {activePosition.pair.token0.symbol}-{activePosition.pair.token1.symbol} Position
                     </TYPE.body>
@@ -236,7 +239,7 @@ function AccountPage({ account, chainId }) {
                             }}
                             key={i}
                           >
-                            <DoubleTokenLogo a0={p.pair.token0.id} a1={p.pair.token1.id} size={16} chainId={chainId} />
+                            <DoubleTokenLogo a0={p.pair.token0.id} a1={p.pair.token1.id} size={16} />
                             <TYPE.body ml={'16px'}>
                               {p.pair.token0.symbol}-{p.pair.token1.symbol} Position
                             </TYPE.body>
@@ -296,7 +299,7 @@ function AccountPage({ account, chainId }) {
             <PanelWrapper>
               <Panel style={{ gridColumn: '1' }}>
                 {activePosition ? (
-                  <PairReturnsChart account={account} position={activePosition} chainId={chainId} />
+                  <PairReturnsChart account={account} position={activePosition} />
                 ) : (
                   <UserChart account={account} position={activePosition} />
                 )}
@@ -311,7 +314,7 @@ function AccountPage({ account, chainId }) {
               marginTop: '1.5rem'
             }}
           >
-            <PositionList positions={positions} chainId={chainId} />
+            <PositionList positions={positions} />
           </Panel>
           <TYPE.main fontSize={'1.125rem'} style={{ marginTop: '3rem' }}>
             Transactions

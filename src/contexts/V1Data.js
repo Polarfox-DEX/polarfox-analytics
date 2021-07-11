@@ -8,6 +8,8 @@ import weekOfYear from 'dayjs/plugin/weekOfYear'
 dayjs.extend(utc)
 dayjs.extend(weekOfYear)
 
+// TODO: can probably delete this file
+
 export async function getV1Data() {
   dayjs.extend(utc)
 
@@ -21,9 +23,9 @@ export async function getV1Data() {
       query: V1_DATA_QUERY,
       variables: {
         date: utcOneDayBack,
-        date2: utcTwoDaysBack,
+        date2: utcTwoDaysBack
       },
-      fetchPolicy: 'cache-first',
+      fetchPolicy: 'cache-first'
     })
 
     let data = result.data.current
@@ -36,11 +38,7 @@ export async function getV1Data() {
       twoDayData.totalVolumeUSD
     )
 
-    let [txCountChange, txCountPercentChange] = get2DayPercentChange(
-      data.txCount,
-      oneDayData.txCount,
-      twoDayData.txCount
-    )
+    let [txCountChange, txCountPercentChange] = get2DayPercentChange(data.txCount, oneDayData.txCount, twoDayData.txCount)
 
     // regular percent changes
     let liquidityPercentChangeUSD = getPercentChange(data.liquidityUsd, oneDayData.liquidityUsd)

@@ -10,7 +10,7 @@ import { RowBetween } from '../components/Row'
 import Search from '../components/Search'
 import { useMedia } from 'react-use'
 
-function AllPairsPage({ chainId }) {
+function AllPairsPage() {
   const allPairs = useAllPairData()
 
   useEffect(() => {
@@ -24,10 +24,10 @@ function AllPairsPage({ chainId }) {
       <FullWrapper>
         <RowBetween>
           <TYPE.largeHeader>Top Pairs</TYPE.largeHeader>
-          {!below800 && <Search small={true} chainId={chainId} />}
+          {!below800 && <Search small={true} />}
         </RowBetween>
         <Panel style={{ padding: below800 && '1rem 0 0 0 ' }}>
-          <PairList pairs={allPairs} disbaleLinks={true} maxItems={50} chainId={chainId} />
+          <PairList pairs={allPairs} disbaleLinks={true} maxItems={50} />
         </Panel>
       </FullWrapper>
     </PageWrapper>

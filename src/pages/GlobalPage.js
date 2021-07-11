@@ -45,12 +45,12 @@ const GridRow = styled.div`
   justify-content: space-between;
 `
 
-function GlobalPage({ chainId, setChainId }) {
+function GlobalPage() {
   // get data for lists and totals
   const allPairs = useAllPairData()
   const allTokens = useAllTokenData()
   const transactions = useGlobalTransactions()
-  const { totalLiquidityUSD, oneDayVolumeUSD, volumeChangeUSD, liquidityChangeUSD } = useGlobalData(chainId)
+  const { totalLiquidityUSD, oneDayVolumeUSD, volumeChangeUSD, liquidityChangeUSD } = useGlobalData()
 
   // breakpoints
   const below800 = useMedia('(max-width: 800px)')
@@ -71,8 +71,8 @@ function GlobalPage({ chainId, setChainId }) {
         <div>
           <AutoColumn gap="24px" style={{ paddingBottom: below800 ? '0' : '24px' }}>
             <TYPE.largeHeader>{below800 ? 'DEX Analytics' : 'Polarfox DEX Analytics'}</TYPE.largeHeader>
-            <BlockchainSelector chainId={chainId} setChainId={setChainId} />
-            <Search chainId={chainId} />
+            <BlockchainSelector />
+            <Search />
             <GlobalStats />
           </AutoColumn>
           {below800 && ( // mobile card
@@ -112,10 +112,10 @@ function GlobalPage({ chainId, setChainId }) {
           {!below800 && (
             <GridRow>
               <Panel style={{ height: '100%', minHeight: '300px' }}>
-                <GlobalChart display="liquidity" chainId={chainId} />
+                <GlobalChart display="liquidity" />
               </Panel>
               <Panel style={{ height: '100%' }}>
-                <GlobalChart display="volume" chainId={chainId} />
+                <GlobalChart display="volume" />
               </Panel>
             </GridRow>
           )}
@@ -133,7 +133,7 @@ function GlobalPage({ chainId, setChainId }) {
             </RowBetween>
           </ListOptions>
           <Panel style={{ marginTop: '6px', padding: '1.125rem 0 ' }}>
-            <TopTokenList tokens={allTokens} chainId={chainId} />
+            <TopTokenList tokens={allTokens} />
           </Panel>
           <ListOptions gap="10px" style={{ marginTop: '2rem', marginBottom: '.5rem' }}>
             <RowBetween>
@@ -142,7 +142,7 @@ function GlobalPage({ chainId, setChainId }) {
             </RowBetween>
           </ListOptions>
           <Panel style={{ marginTop: '6px', padding: '1.125rem 0 ' }}>
-            <PairList pairs={allPairs} chainId={chainId} />
+            <PairList pairs={allPairs} />
           </Panel>
 
           <span>

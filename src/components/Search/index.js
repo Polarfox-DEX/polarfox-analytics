@@ -8,6 +8,7 @@ import { BasicLink } from '../Link'
 
 import { useAllTokenData, useTokenData } from '../../contexts/TokenData'
 import { useAllPairData, usePairData } from '../../contexts/PairData'
+import { useChainId } from '../../contexts/Application'
 import DoubleTokenLogo from '../DoubleLogo'
 import { useMedia } from 'react-use'
 import { useAllPairsInUniswap, useAllTokensInUniswap } from '../../contexts/GlobalData'
@@ -149,7 +150,9 @@ const Blue = styled.span`
   }
 `
 
-export const Search = ({ small = false, chainId }) => {
+export const Search = ({ small = false }) => {
+  const { chainId } = useChainId()
+
   let allTokens = useAllTokensInUniswap()
   const allTokenData = useAllTokenData()
 
@@ -184,7 +187,7 @@ export const Search = ({ small = false, chainId }) => {
     async function fetchData() {
       try {
         if (value?.length > 0) {
-          let tokens = await client.query({
+          let tokens = await client(chainId).query({
             variables: {
               value: value ? value.toUpperCase() : '',
               id: value
@@ -192,7 +195,7 @@ export const Search = ({ small = false, chainId }) => {
             query: TOKEN_SEARCH
           })
 
-          let pairs = await client.query({
+          let pairs = await client(chainId).query({
             query: PAIR_SEARCH,
             variables: {
               tokens: tokens.data.asSymbol?.map((t) => t.id),
@@ -208,7 +211,7 @@ export const Search = ({ small = false, chainId }) => {
       }
     }
     fetchData()
-  }, [value])
+  }, [value, chainId])
 
   function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
@@ -461,7 +464,7 @@ export const Search = ({ small = false, chainId }) => {
               return (
                 <BasicLink to={'/pair/' + pair.id} key={pair.id} onClick={onDismiss}>
                   <MenuItem>
-                    <DoubleTokenLogo a0={pair?.token0?.id} a1={pair?.token1?.id} margin={true} chainId={chainId} />
+                    <DoubleTokenLogo a0={pair?.token0?.id} a1={pair?.token1?.id} margin={true} />
                     <TYPE.body style={{ marginLeft: '10px' }}>{pair.token0.symbol + '-' + pair.token1.symbol} Pair</TYPE.body>
                   </MenuItem>
                 </BasicLink>
@@ -491,7 +494,7 @@ export const Search = ({ small = false, chainId }) => {
               <BasicLink to={'/token/' + token.id} key={token.id} onClick={onDismiss}>
                 <MenuItem>
                   <RowFixed>
-                    <TokenLogo address={token.id} style={{ marginRight: '10px' }} chainId={chainId} />
+                    <TokenLogo address={token.id} style={{ marginRight: '10px' }} />
                     <FormattedName text={token.name} maxCharacters={20} style={{ marginRight: '6px' }} />
                     (<FormattedName text={token.symbol} maxCharacters={6} />)
                   </RowFixed>

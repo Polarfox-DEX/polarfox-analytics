@@ -9,6 +9,7 @@ import { darken } from 'polished'
 import { useMedia, usePrevious } from 'react-use'
 import { timeframeOptions } from '../../constants'
 import { useTokenChartData, useTokenPriceData } from '../../contexts/TokenData'
+import { useChainId } from '../../contexts/Application'
 import DropdownSelect from '../DropdownSelect'
 import CandleStickChart from '../CandleChart'
 import LocalLoader from '../LocalLoader'
@@ -43,7 +44,9 @@ const DATA_FREQUENCY = {
   LINE: 'LINE'
 }
 
-const TokenChart = ({ address, color, base, chainId }) => {
+const TokenChart = ({ address, color, base }) => {
+  const { chainId } = useChainId()
+
   // settings for the window and candle width
   const [chartFilter, setChartFilter] = useState(CHART_VIEW.PRICE)
   const [frequency, setFrequency] = useState(DATA_FREQUENCY.HOUR)

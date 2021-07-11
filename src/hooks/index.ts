@@ -4,8 +4,11 @@ import Vibrant from 'node-vibrant'
 import { hex } from 'wcag-contrast'
 import { isAddress } from '../utils'
 import copy from 'copy-to-clipboard'
+import { useChainId } from '../contexts/Application'
 
-export function useColor(tokenAddress, chainId) {
+export function useColor(tokenAddress) {
+  const { chainId } = useChainId()
+
   const [color, setColor] = useState('#2172E5')
   if (tokenAddress) {
     const path = `https://raw.githubusercontent.com/Polarfox-DEX/polarfox-token-lists/master/${chainId}/token-logos/${isAddress(

@@ -2,6 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 
 import { CHAIN_ID } from '../../constants'
+import { useChainId } from '../../contexts/Application'
 
 const BlockchainList = styled.div`
   font-weight: 500;
@@ -23,16 +24,17 @@ const BlockchainOption = styled.span`
   }
 `
 
-function BlockchainSelector({ chainId, setChainId }) {
+function BlockchainSelector() {
   // TODO: Might want to reload the page when changing the chainId, or at least reload a bunch of stuff
+  const { chainId, updateChainId } = useChainId()
 
   return (
     <BlockchainList>
-      <BlockchainOption activeText={chainId === CHAIN_ID.AVALANCHE} onClick={() => setChainId(CHAIN_ID.AVALANCHE)}>
+      <BlockchainOption activeText={chainId === CHAIN_ID.AVALANCHE} onClick={() => updateChainId(CHAIN_ID.AVALANCHE)}>
         Avalanche
       </BlockchainOption>
       <VerticalBar> | </VerticalBar>
-      <BlockchainOption activeText={chainId === CHAIN_ID.FUJI} onClick={() => setChainId(CHAIN_ID.FUJI)}>
+      <BlockchainOption activeText={chainId === CHAIN_ID.FUJI} onClick={() => updateChainId(CHAIN_ID.FUJI)}>
         Fuji
       </BlockchainOption>
     </BlockchainList>

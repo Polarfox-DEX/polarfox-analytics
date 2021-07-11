@@ -65,8 +65,22 @@ export const DEFAULT_DECIMALS = 4
 // Tokens whose price should be displayed with a custom number of decimals
 // Lower case
 export const CUSTOM_DECIMALS_TOKENS = {
-  [CHAIN_ID.AVALANCHE]: [],
+  [CHAIN_ID.AVALANCHE]: [], // TODO: Add Akita Inu on Avalanche
   [CHAIN_ID.FUJI]: {
     '0xff2ebd79c0948c8fe69b96434915abc03ebb5c37': 10 // Akita Inu
   }
+}
+
+export const SUBGRAPH_CLIENT = {
+  [CHAIN_ID.AVALANCHE]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-subgraph', // TODO: Add Avalanche
+  [CHAIN_ID.FUJI]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-subgraph'
+}
+
+export const HEALTH_CLIENT = 'https://api.thegraph.com/index-node/graphql'
+
+export const STAKING_CLIENT = 'https://api.thegraph.com/subgraphs/name/way2rach/talisman'
+
+export const BLOCK_CLIENT = {
+  [CHAIN_ID.AVALANCHE]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-blocks', // TODO: Add Avalanche
+  [CHAIN_ID.FUJI]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-blocks'
 }

@@ -20,7 +20,7 @@ const VOLUME_WINDOW = {
   DAYS: 'DAYS'
 }
 
-const GlobalChart = ({ display, chainId }) => {
+const GlobalChart = ({ display }) => {
   // chart options
   const [chartView, setChartView] = useState(display === 'volume' ? CHART_VIEW.VOLUME : CHART_VIEW.LIQUIDITY)
 
@@ -30,9 +30,7 @@ const GlobalChart = ({ display, chainId }) => {
 
   // global historical data
   const [dailyData, weeklyData] = useGlobalChartData()
-  const { totalLiquidityUSD, oneDayVolumeUSD, volumeChangeUSD, liquidityChangeUSD, oneWeekVolume, weeklyVolumeChange } = useGlobalData(
-    chainId
-  )
+  const { totalLiquidityUSD, oneDayVolumeUSD, volumeChangeUSD, liquidityChangeUSD, oneWeekVolume, weeklyVolumeChange } = useGlobalData()
 
   // based on window, get start time
   let utcStartTime = getTimeframe(timeWindow)
@@ -47,7 +45,7 @@ const GlobalChart = ({ display, chainId }) => {
           if (item.date > utcStartTime) {
             return item
           } else {
-            return // TODO: Add 'undefined' to kill the array-callback-return warning. Is it reasonable?
+            return undefined
           }
         })
         .filter((item) => {

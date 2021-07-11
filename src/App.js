@@ -17,8 +17,7 @@ import SideNav from './components/SideNav'
 import AccountLookup from './pages/AccountLookup'
 import { OVERVIEW_TOKEN_BLACKLIST, PAIR_BLACKLIST } from './constants'
 import LocalLoader from './components/LocalLoader'
-import { useLatestBlocks } from './contexts/Application'
-import { DEFAULT_CHAIN_ID } from './constants'
+import { useLatestBlocks, useChainId } from './contexts/Application'
 
 const AppWrapper = styled.div`
   position: relative;
@@ -79,14 +78,14 @@ const WarningBanner = styled.div`
 /**
  * Wrap the component with the header and sidebar pinned tab
  */
-const LayoutWrapper = ({ children, savedOpen, setSavedOpen, chainId }) => {
+const LayoutWrapper = ({ children, savedOpen, setSavedOpen }) => {
   return (
     <>
       <ContentWrapper open={savedOpen}>
         <SideNav />
         <Center id="center">{children}</Center>
         <Right open={savedOpen}>
-          <PinnedData open={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId} />
+          <PinnedData open={savedOpen} setSavedOpen={setSavedOpen} />
         </Right>
       </ContentWrapper>
     </>
@@ -98,9 +97,9 @@ const BLOCK_DIFFERENCE_THRESHOLD = 30
 function App() {
   const [savedOpen, setSavedOpen] = useState(false)
   // TODO: Look at the URL parameters, so we can send the user directly to Fuji if he is on that blockchain
-  const [chainId, setChainId] = useState(DEFAULT_CHAIN_ID)
+  const { chainId } = useChainId()
 
-  const globalData = useGlobalData(chainId)
+  const globalData = useGlobalData()
   const globalChartData = useGlobalChartData()
   const [latestBlock, headBlock] = useLatestBlocks()
 
@@ -108,7 +107,7 @@ function App() {
   const showWarning = headBlock && latestBlock ? headBlock - latestBlock > BLOCK_DIFFERENCE_THRESHOLD : false
 
   return (
-    <ApolloProvider client={client}>
+    <ApolloProvider client={client(chainId)}>
       <AppWrapper>
         {showWarning && (
           <WarningWrapper>
@@ -130,8 +129,8 @@ function App() {
                   }
                   if (isAddress(match.params.tokenAddress.toLowerCase())) {
                     return (
-                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
-                        <TokenPage address={match.params.tokenAddress.toLowerCase()} chainId={chainId} />
+                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                        <TokenPage address={match.params.tokenAddress.toLowerCase()} />
                       </LayoutWrapper>
                     )
                   } else {
@@ -149,8 +148,8 @@ function App() {
                   }
                   if (isAddress(match.params.pairAddress.toLowerCase())) {
                     return (
-                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
-                        <PairPage pairAddress={match.params.pairAddress.toLowerCase()} chainId={chainId} />
+                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                        <PairPage pairAddress={match.params.pairAddress.toLowerCase()} />
                       </LayoutWrapper>
                     )
                   } else {
@@ -165,8 +164,8 @@ function App() {
                 render={({ match }) => {
                   if (isAddress(match.params.accountAddress.toLowerCase())) {
                     return (
-                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
-                        <AccountPage account={match.params.accountAddress.toLowerCase()} chainId={chainId} />
+                      <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                        <AccountPage account={match.params.accountAddress.toLowerCase()} />
                       </LayoutWrapper>
                     )
                   } else {
@@ -176,26 +175,26 @@ function App() {
               />
 
               <Route path="/home">
-                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
-                  <GlobalPage chainId={chainId} setChainId={setChainId} />
+                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                  <GlobalPage />
                 </LayoutWrapper>
               </Route>
 
               <Route path="/tokens">
-                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
-                  <AllTokensPage chainId={chainId} />
+                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                  <AllTokensPage />
                 </LayoutWrapper>
               </Route>
 
               <Route path="/pairs">
-                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
-                  <AllPairsPage chainId={chainId} />
+                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                  <AllPairsPage />
                 </LayoutWrapper>
               </Route>
 
               <Route path="/accounts">
-                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen} chainId={chainId}>
-                  <AccountLookup chainId={chainId} />
+                <LayoutWrapper savedOpen={savedOpen} setSavedOpen={setSavedOpen}>
+                  <AccountLookup />
                 </LayoutWrapper>
               </Route>
 

@@ -115,7 +115,7 @@ const FIELD_TO_VALUE = {
   [SORT_FIELD.FEES]: 'oneDayVolumeUSD'
 }
 
-function PairList({ pairs, color, disbaleLinks, maxItems = 10, chainId }) {
+function PairList({ pairs, color, disbaleLinks, maxItems = 10 }) {
   const below600 = useMedia('(max-width: 600px)')
   const below740 = useMedia('(max-width: 740px)')
   const below1080 = useMedia('(max-width: 1080px)')
@@ -156,13 +156,7 @@ function PairList({ pairs, color, disbaleLinks, maxItems = 10, chainId }) {
         <DashGrid style={{ height: '48px' }} disbaleLinks={disbaleLinks} focus={true}>
           <DataText area="name" fontWeight="500">
             {!below600 && <div style={{ marginRight: '20px', width: '10px' }}>{index}</div>}
-            <DoubleTokenLogo
-              size={below600 ? 16 : 20}
-              a0={pairData.token0.id}
-              a1={pairData.token1.id}
-              margin={!below740}
-              chainId={chainId}
-            />
+            <DoubleTokenLogo size={below600 ? 16 : 20} a0={pairData.token0.id} a1={pairData.token1.id} margin={!below740} />
             <CustomLink style={{ marginLeft: '20px', whiteSpace: 'nowrap' }} to={'/pair/' + pairAddress} color={color}>
               <FormattedName
                 text={pairData.token0.symbol + '-' + pairData.token1.symbol}

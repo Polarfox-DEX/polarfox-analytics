@@ -39,12 +39,12 @@ function formatPricesForEarlyTimestamps(position): Position {
   return position
 }
 
-async function getPrincipalForUserPerPair(user: string, pairAddress: string) {
+async function getPrincipalForUserPerPair(user: string, pairAddress: string, chainId: number) {
   let usd = 0
   let amount0 = 0
   let amount1 = 0
   // get all minst and burns to get principal amounts
-  const results = await client.query({
+  const results = await client(chainId).query({
     query: USER_MINTS_BUNRS_PER_PAIR,
     variables: {
       user,
@@ -158,8 +158,8 @@ export function getMetricsForPositionWindow(positionT0: Position, positionT1: Po
  * @param pairSnapshots // history of entries and exits for lp on this pair
  * @param currentAVAXPrice // current price of AVAX used for USD conversions
  */
-export async function getHistoricalPairReturns(startDateTimestamp, currentPairData, pairSnapshots, currentAVAXPrice) {
-  // catch case where data not puplated yet
+export async function getHistoricalPairReturns(startDateTimestamp, currentPairData, pairSnapshots, currentAVAXPrice, chainId: number) {
+  // Catch case where data not populated yet
   if (!currentPairData.createdAtTimestamp) {
     return []
   }
@@ -181,7 +181,7 @@ export async function getHistoricalPairReturns(startDateTimestamp, currentPairDa
     dayIndex = dayIndex + 1
   }
 
-  const shareValues = await getShareValueOverTime(currentPairData.id, dayTimestamps)
+  const shareValues = await getShareValueOverTime(currentPairData.id, dayTimestamps, chainId)
   const shareValuesFormatted = {}
   shareValues?.map((share) => {
     shareValuesFormatted[share.timestamp] = share
@@ -250,9 +250,9 @@ export async function getHistoricalPairReturns(startDateTimestamp, currentPairDa
  * @param pair
  * @param avaxPrice
  */
-export async function getLPReturnsOnPair(user: string, pair, avaxPrice: number, snapshots) {
+export async function getLPReturnsOnPair(user: string, pair, avaxPrice: number, snapshots, chainId: number) {
   // initialize values
-  const principal = await getPrincipalForUserPerPair(user, pair.id)
+  const principal = await getPrincipalForUserPerPair(user, pair.id, chainId)
   let hodlReturn = 0
   let netReturn = 0
   let uniswapReturn = 0

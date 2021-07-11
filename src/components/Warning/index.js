@@ -91,7 +91,7 @@ export default function Warning({ type, show, setShow, address }) {
                 fontWeight={500}
                 lineHeight={'145.23%'}
                 color={'#2172E5'}
-                href={'https://cchain.explorer.avax.network/address/' + address}
+                href={'https://cchain.explorer.avax.network/address/' + address} // TODO: should depend on chainID, as well as all other instances of the C-chain explorer
                 target="_blank"
               >
                 View {type === 'token' ? 'token' : 'pair'} contract on C-Chain explorer

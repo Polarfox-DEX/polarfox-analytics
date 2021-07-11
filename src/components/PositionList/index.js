@@ -12,6 +12,7 @@ import { withRouter } from 'react-router-dom'
 import { formattedNum, getPoolLink } from '../../utils'
 import { AutoColumn } from '../Column'
 import { useAvaxPrice } from '../../contexts/GlobalData'
+import { useChainId } from '../../contexts/Application'
 import { RowFixed } from '../Row'
 import { ButtonLight } from '../ButtonStyled'
 import { TYPE } from '../../Theme'
@@ -107,7 +108,9 @@ const SORT_FIELD = {
   UNISWAP_RETURN: 'UNISWAP_RETURN'
 }
 
-function PositionList({ positions, chainId }) {
+function PositionList({ positions }) {
+  const { chainId } = useChainId()
+
   const below500 = useMedia('(max-width: 500px)')
   const below740 = useMedia('(max-width: 740px)')
 
@@ -146,7 +149,7 @@ function PositionList({ positions, chainId }) {
         {!below740 && <DataText area="number">{index}</DataText>}
         <DataText area="name" justifyContent="flex-start" alignItems="flex-start">
           <AutoColumn gap="8px" justify="flex-start" align="flex-start">
-            <DoubleTokenLogo size={16} a0={position.pair.token0.id} a1={position.pair.token1.id} margin={!below740} chainId={chainId} />
+            <DoubleTokenLogo size={16} a0={position.pair.token0.id} a1={position.pair.token1.id} margin={!below740} />
           </AutoColumn>
           <AutoColumn gap="8px" justify="flex-start" style={{ marginLeft: '20px' }}>
             <CustomLink to={'/pair/' + position.pair.id}>

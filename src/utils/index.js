@@ -126,8 +126,8 @@ export async function splitQuery(query, localClient, vars, list, skipCount = 100
  * @dev Query speed is optimized by limiting to a 600-second period
  * @param {Int} timestamp in seconds
  */
-export async function getBlockFromTimestamp(timestamp) {
-  let result = await blockClient.query({
+export async function getBlockFromTimestamp(timestamp, chainId) {
+  let result = await blockClient(chainId).query({
     query: GET_BLOCK,
     variables: {
       timestampFrom: timestamp,
@@ -145,12 +145,12 @@ export async function getBlockFromTimestamp(timestamp) {
  * @dev timestamps are returns as they were provided; not the block time.
  * @param {Array} timestamps
  */
-export async function getBlocksFromTimestamps(timestamps, skipCount = 500) {
+export async function getBlocksFromTimestamps(timestamps, chainId, skipCount = 500) {
   if (timestamps?.length === 0) {
     return []
   }
 
-  let fetchedData = await splitQuery(GET_BLOCKS, blockClient, [], timestamps, skipCount)
+  let fetchedData = await splitQuery(GET_BLOCKS, blockClient(chainId), [], timestamps, skipCount)
 
   let blocks = []
   if (fetchedData) {
@@ -173,8 +173,8 @@ export async function getBlocksFromTimestamps(timestamps, skipCount = 500) {
  * @dev timestamps are returns as they were provided; not the block time.
  * @param {Array} timestamps
  */
-export async function getMostRecentBlockSinceTimestamp(timestamp, skipCount = 500) {
-  let result = await blockClient.query({
+export async function getMostRecentBlockSinceTimestamp(timestamp, chainId, skipCount = 500) {
+  let result = await blockClient(chainId).query({
     query: GET_BLOCK_AFTER,
     variables: {
       timestampFrom: timestamp
@@ -185,7 +185,7 @@ export async function getMostRecentBlockSinceTimestamp(timestamp, skipCount = 50
   let block = result?.data?.blocks?.[0]?.number
 
   if (block === undefined) {
-    result = await blockClient.query({
+    result = await blockClient(chainId).query({
       query: GET_BLOCK_BEFORE,
       variables: {
         timestampTo: timestamp
@@ -198,12 +198,13 @@ export async function getMostRecentBlockSinceTimestamp(timestamp, skipCount = 50
   return block
 }
 
-export async function getLiquidityTokenBalanceOvertime(account, timestamps) {
+// TODO: Seems like this function is not used anywhere
+export async function getLiquidityTokenBalanceOvertime(account, timestamps, chainId) {
   // get blocks based on timestamps
-  const blocks = await getBlocksFromTimestamps(timestamps)
+  const blocks = await getBlocksFromTimestamps(timestamps, chainId)
 
   // get historical share values with time travel queries
-  let result = await client.query({
+  let result = await client(chainId).query({
     query: SHARE_VALUE(account, blocks),
     fetchPolicy: 'cache-first'
   })
@@ -226,7 +227,7 @@ export async function getLiquidityTokenBalanceOvertime(account, timestamps) {
  * @param {String} pairAddress
  * @param {Array} timestamps
  */
-export async function getShareValueOverTime(pairAddress, timestamps) {
+export async function getShareValueOverTime(pairAddress, timestamps, chainId) {
   if (!timestamps) {
     const utcCurrentTime = dayjs()
     const utcSevenDaysBack = utcCurrentTime.subtract(8, 'day').unix()
@@ -234,10 +235,10 @@ export async function getShareValueOverTime(pairAddress, timestamps) {
   }
 
   // get blocks based on timestamps
-  const blocks = await getBlocksFromTimestamps(timestamps)
+  const blocks = await getBlocksFromTimestamps(timestamps, chainId)
 
   // get historical share values with time travel queries
-  let result = await client.query({
+  let result = await client(chainId).query({
     query: SHARE_VALUE(pairAddress, blocks),
     fetchPolicy: 'cache-first'
   })

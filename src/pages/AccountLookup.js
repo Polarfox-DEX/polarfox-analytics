@@ -19,7 +19,7 @@ const AccountWrapper = styled.div`
   }
 `
 
-function AccountLookup({ chainId }) {
+function AccountLookup() {
   // scroll to top
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -34,7 +34,7 @@ function AccountLookup({ chainId }) {
       <FullWrapper>
         <RowBetween>
           <TYPE.largeHeader>Wallet analytics</TYPE.largeHeader>
-          {!below600 && <Search small={true} chainId={chainId} />}
+          {!below600 && <Search small={true} />}
         </RowBetween>
         <AccountWrapper>
           <AccountSearch />
@@ -42,7 +42,7 @@ function AccountLookup({ chainId }) {
         <TYPE.main fontSize={'1.125rem'} style={{ marginTop: '2rem' }}>
           Top Liquidity Positions
         </TYPE.main>
-        <Panel>{topLps && topLps.length > 0 ? <LPList lps={topLps} maxItems={200} chainId={chainId} /> : <LocalLoader />}</Panel>
+        <Panel>{topLps && topLps.length > 0 ? <LPList lps={topLps} maxItems={200} /> : <LocalLoader />}</Panel>
       </FullWrapper>
     </PageWrapper>
   )

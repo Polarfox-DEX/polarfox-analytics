@@ -31,6 +31,7 @@ import { PlusCircle, Bookmark } from 'react-feather'
 import FormattedName from '../components/FormattedName'
 import { useListedTokens } from '../contexts/Application'
 import { DEFAULT_DECIMALS, CUSTOM_DECIMALS_TOKENS } from '../constants'
+import { useChainId } from '../contexts/Application'
 
 const DashboardWrapper = styled.div`
   width: 100%;
@@ -89,7 +90,9 @@ const WarningGrouping = styled.div`
   pointer-events: ${({ disabled }) => disabled && 'none'};
 `
 
-function TokenPage({ address, history, chainId }) {
+function TokenPage({ address, history }) {
+  const { chainId } = useChainId()
+
   const {
     id,
     name,
@@ -111,7 +114,7 @@ function TokenPage({ address, history, chainId }) {
   }, [])
 
   // detect color from token
-  const backgroundColor = useColor(id, chainId)
+  const backgroundColor = useColor(id)
 
   const allPairs = useTokenPairs(address)
 
@@ -162,7 +165,7 @@ function TokenPage({ address, history, chainId }) {
 
   const [dismissed, markAsDismissed] = usePathDismissed(history.location.pathname)
   const [savedTokens, addToken] = useSavedTokens()
-  const listedTokens = useListedTokens(chainId)
+  const listedTokens = useListedTokens()
 
   useEffect(() => {
     window.scrollTo({
@@ -199,7 +202,7 @@ function TokenPage({ address, history, chainId }) {
               </Text>
             </Link>
           </AutoRow>
-          {!below600 && <Search small={true} chainId={chainId} />}
+          {!below600 && <Search small={true} />}
         </RowBetween>
 
         <WarningGrouping disabled={!dismissed && listedTokens && !listedTokens.includes(address)}>
@@ -213,7 +216,7 @@ function TokenPage({ address, history, chainId }) {
             >
               <RowFixed style={{ flexWrap: 'wrap' }}>
                 <RowFixed style={{ alignItems: 'baseline' }}>
-                  <TokenLogo address={address} size="32px" style={{ alignSelf: 'center' }} chainId={chainId} />
+                  <TokenLogo address={address} size="32px" style={{ alignSelf: 'center' }} />
                   <TYPE.main fontSize={below1080 ? '1.5rem' : '2rem'} fontWeight={500} style={{ margin: '0 1rem' }}>
                     <RowFixed gap="6px">
                       <FormattedName text={name ? name + ' ' : ''} maxCharacters={16} style={{ marginRight: '6px' }} />{' '}
@@ -325,7 +328,7 @@ function TokenPage({ address, history, chainId }) {
                     gridRow: below1080 ? '' : '1/4'
                   }}
                 >
-                  <TokenChart address={address} color={backgroundColor} base={priceUSD} chainId={chainId} />
+                  <TokenChart address={address} color={backgroundColor} base={priceUSD} />
                 </Panel>
               </PanelWrapper>
             </>
@@ -342,11 +345,7 @@ function TokenPage({ address, history, chainId }) {
                 padding: '1.125rem 0 '
               }}
             >
-              {address && fetchedPairsList ? (
-                <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} chainId={chainId} />
-              ) : (
-                <Loader />
-              )}
+              {address && fetchedPairsList ? <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} /> : <Loader />}
             </Panel>
             <RowBetween mt={40} mb={'1rem'}>
               <TYPE.main fontSize={'1.125rem'}>Transactions</TYPE.main> <div />

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useMemo, useCallback, useState, useEffect } from 'react'
-import { timeframeOptions, SUPPORTED_LIST_URLS__NO_ENS } from '../constants'
+import { timeframeOptions, SUPPORTED_LIST_URLS__NO_ENS, DEFAULT_CHAIN_ID } from '../constants'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import getTokenList from '../utils/tokenLists'
@@ -13,6 +13,7 @@ const UPDATE_SESSION_START = 'UPDATE_SESSION_START'
 const UPDATED_SUPPORTED_TOKENS = 'UPDATED_SUPPORTED_TOKENS'
 const UPDATE_LATEST_BLOCK = 'UPDATE_LATEST_BLOCK'
 const UPDATE_HEAD_BLOCK = 'UPDATE_HEAD_BLOCK'
+const UPDATE_CHAIN_ID = 'UPDATE_CHAIN_ID'
 
 const SUPPORTED_TOKENS = 'SUPPORTED_TOKENS'
 const TIME_KEY = 'TIME_KEY'
@@ -20,6 +21,7 @@ const CURRENCY = 'CURRENCY'
 const SESSION_START = 'SESSION_START'
 const LATEST_BLOCK = 'LATEST_BLOCK'
 const HEAD_BLOCK = 'HEAD_BLOCK'
+const CHAIN_ID = 'CHAIN_ID'
 
 const ApplicationContext = createContext()
 
@@ -75,6 +77,14 @@ function reducer(state, { type, payload }) {
       }
     }
 
+    case UPDATE_CHAIN_ID: {
+      const { chainId } = payload
+      return {
+        ...state,
+        [CHAIN_ID]: chainId
+      }
+    }
+
     default: {
       throw Error(`Unexpected action type in DataContext reducer: '${type}'.`)
     }
@@ -83,7 +93,8 @@ function reducer(state, { type, payload }) {
 
 const INITIAL_STATE = {
   CURRENCY: 'USD',
-  TIME_KEY: timeframeOptions.ALL_TIME
+  TIME_KEY: timeframeOptions.ALL_TIME,
+  CHAIN_ID: DEFAULT_CHAIN_ID
 }
 
 export default function Provider({ children }) {
@@ -144,6 +155,15 @@ export default function Provider({ children }) {
     })
   }, [])
 
+  const updateChainId = useCallback((chainId) => {
+    dispatch({
+      type: UPDATE_CHAIN_ID,
+      payload: {
+        chainId
+      }
+    })
+  }, [])
+
   return (
     <ApplicationContext.Provider
       value={useMemo(
@@ -155,10 +175,11 @@ export default function Provider({ children }) {
             updateTimeframe,
             updateSupportedTokens,
             updateLatestBlock,
-            updateHeadBlock
+            updateHeadBlock,
+            updateChainId
           }
         ],
-        [state, update, updateTimeframe, updateSessionStart, updateSupportedTokens, updateLatestBlock, updateHeadBlock]
+        [state, update, updateTimeframe, updateSessionStart, updateSupportedTokens, updateLatestBlock, updateHeadBlock, updateChainId]
       )}
     >
       {children}
@@ -258,8 +279,10 @@ export function useSessionStart() {
   return parseInt(seconds / 1000)
 }
 
-export function useListedTokens(chainId) {
+export function useListedTokens() {
   const [state, { updateSupportedTokens }] = useApplicationContext()
+
+  const chainId = state[CHAIN_ID]
   const supportedTokens = state?.[SUPPORTED_TOKENS]
 
   useEffect(() => {
@@ -278,4 +301,9 @@ export function useListedTokens(chainId) {
   }, [updateSupportedTokens, supportedTokens, chainId])
 
   return supportedTokens
+}
+
+export function useChainId() {
+  const [state, { updateChainId }] = useApplicationContext()
+  return { chainId: state[CHAIN_ID], updateChainId: updateChainId }
 }

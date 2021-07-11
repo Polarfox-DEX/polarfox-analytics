@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useMemo, useCallback, use
 import { useAllPairData, usePairData } from './PairData'
 import { client, stakingClient } from '../apollo/client'
 import { USER_TRANSACTIONS, USER_POSITIONS, USER_HISTORY, PAIR_DAY_DATA_BULK, MINING_POSITIONS } from '../apollo/queries'
-import { useTimeframe, useStartTimestamp } from './Application'
+import { useTimeframe, useStartTimestamp, useChainId } from './Application'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { useAvaxPrice, getAvaxPriceAtDate, getCurrentAvaxPrice } from './GlobalData'
@@ -153,12 +153,14 @@ export default function Provider({ children }) {
 }
 
 export function useUserTransactions(account) {
+  const { chainId } = useChainId()
+
   const [state, { updateTransactions }] = useUserContext()
   const transactions = state?.[account]?.[TRANSACTIONS_KEY]
   useEffect(() => {
     async function fetchData(account) {
       try {
-        let result = await client.query({
+        let result = await client(chainId).query({
           query: USER_TRANSACTIONS,
           variables: {
             user: account
@@ -175,7 +177,7 @@ export function useUserTransactions(account) {
     if (!transactions && account) {
       fetchData(account)
     }
-  }, [account, transactions, updateTransactions])
+  }, [account, transactions, updateTransactions, chainId])
 
   let [avaxPrice] = useAvaxPrice()
 
@@ -203,6 +205,8 @@ export function useUserTransactions(account) {
  * @param {*} account
  */
 export function useUserSnapshots(account) {
+  const { chainId } = useChainId()
+
   const [state, { updateUserSnapshots }] = useUserContext()
   const snapshots = state?.[account]?.[USER_SNAPSHOTS]
 
@@ -213,7 +217,7 @@ export function useUserSnapshots(account) {
         let allResults = []
         let found = false
         while (!found) {
-          let result = await client.query({
+          let result = await client(chainId).query({
             query: USER_HISTORY,
             variables: {
               skip: skip,
@@ -238,7 +242,7 @@ export function useUserSnapshots(account) {
     if (!snapshots && account) {
       fetchData()
     }
-  }, [account, snapshots, updateUserSnapshots])
+  }, [account, snapshots, updateUserSnapshots, chainId])
 
   return snapshots
 }
@@ -250,6 +254,8 @@ export function useUserSnapshots(account) {
  * @param {*} account
  */
 export function useUserPositionChart(position, account) {
+  const { chainId } = useChainId()
+
   const pairAddress = position?.pair?.id
   const [state, { updateUserPairReturns }] = useUserContext()
 
@@ -274,7 +280,7 @@ export function useUserPositionChart(position, account) {
 
   useEffect(() => {
     async function fetchData() {
-      let fetchedData = await getHistoricalPairReturns(startDateTimestamp, currentPairData, pairSnapshots, currentAVAXPrice)
+      let fetchedData = await getHistoricalPairReturns(startDateTimestamp, currentPairData, pairSnapshots, currentAVAXPrice, chainId)
       updateUserPairReturns(account, pairAddress, fetchedData)
     }
     if (
@@ -298,7 +304,8 @@ export function useUserPositionChart(position, account) {
     currentPairData,
     currentAVAXPrice,
     updateUserPairReturns,
-    position.pair.id
+    position.pair.id,
+    chainId
   ])
 
   return formattedHistory
@@ -310,6 +317,8 @@ export function useUserPositionChart(position, account) {
  * and usd liquidity value.
  */
 export function useUserLiquidityChart(account) {
+  const { chainId } = useChainId()
+
   const history = useUserSnapshots(account)
   // formatetd array to return for chart data
   const [formattedHistory, setFormattedHistory] = useState()
@@ -367,7 +376,7 @@ export function useUserLiquidityChart(account) {
       // get all day datas where date is in this list, and pair is in pair list
       let {
         data: { pairDayDatas }
-      } = await client.query({
+      } = await client(chainId).query({
         query: PAIR_DAY_DATA_BULK(pairs, startDateTimestamp)
       })
 
@@ -451,12 +460,13 @@ export function useUserLiquidityChart(account) {
     if (history && startDateTimestamp && history.length > 0) {
       fetchData()
     }
-  }, [history, startDateTimestamp])
+  }, [history, startDateTimestamp, chainId])
 
   return formattedHistory
 }
 
 export function useUserPositions(account) {
+  const { chainId } = useChainId()
   const [state, { updatePositions }] = useUserContext()
   const positions = state?.[account]?.[POSITIONS_KEY]
 
@@ -466,7 +476,7 @@ export function useUserPositions(account) {
   useEffect(() => {
     async function fetchData(account) {
       try {
-        let result = await client.query({
+        let result = await client(chainId).query({
           query: USER_POSITIONS,
           variables: {
             user: account
@@ -480,7 +490,7 @@ export function useUserPositions(account) {
                 // Set USD price
                 positionData.pair.reserveUSD = positionData.pair.reserveAVAX * avaxPrice ?? 0
               }
-              const returnData = await getLPReturnsOnPair(account, positionData.pair, avaxPrice, snapshots)
+              const returnData = await getLPReturnsOnPair(account, positionData.pair, avaxPrice, snapshots, chainId)
               return {
                 ...positionData,
                 ...returnData
@@ -496,11 +506,12 @@ export function useUserPositions(account) {
     if (!positions && account && avaxPrice && snapshots) {
       fetchData(account)
     }
-  }, [account, positions, updatePositions, avaxPrice, snapshots])
+  }, [account, positions, updatePositions, avaxPrice, snapshots, chainId])
 
   return positions
 }
 
+// TODO: Seems like this function is not used
 export function useMiningPositions(account) {
   const [state, { updateMiningPositions }] = useUserContext()
   const allPairData = useAllPairData()

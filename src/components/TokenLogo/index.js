@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { isAddress } from '../../utils/index.js'
 import PlaceHolder from '../../assets/placeholder.png'
-import EthereumLogo from '../../assets/eth.png'
-import { CHAIN_ID } from '../../constants/index.js'
-
+import { useChainId } from '../../contexts/Application'
 const BAD_IMAGES = {}
 
 const Inline = styled.div`
@@ -21,18 +19,19 @@ const Image = styled.img`
   box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.075);
 `
 
-const StyledEthereumLogo = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
+// const StyledEthereumLogo = styled.div`
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
 
-  > img {
-    width: ${({ size }) => size};
-    height: ${({ size }) => size};
-  }
-`
+//   > img {
+//     width: ${({ size }) => size};
+//     height: ${({ size }) => size};
+//   }
+// `
 
-export default function TokenLogo({ address, header = false, size = '24px', chainId, ...rest }) {
+export default function TokenLogo({ address, header = false, size = '24px', ...rest }) {
+  const { chainId } = useChainId()
   const [error, setError] = useState(false)
 
   useEffect(() => {
