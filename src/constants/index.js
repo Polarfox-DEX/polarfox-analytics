@@ -84,3 +84,8 @@ export const BLOCK_CLIENT = {
   [CHAIN_ID.AVALANCHE]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-blocks', // TODO: Add Avalanche
   [CHAIN_ID.FUJI]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-blocks'
 }
+
+export const EXPLORER = {
+  [CHAIN_ID.AVALANCHE]: 'https://cchain.explorer.avax.network',
+  [CHAIN_ID.FUJI]: 'https://cchain.explorer.avax-test.network'
+}

@@ -8,7 +8,7 @@ import { GET_BLOCK, GET_BLOCKS, GET_BLOCK_BEFORE, GET_BLOCK_AFTER, SHARE_VALUE }
 import { Text } from 'rebass'
 import _Decimal from 'decimal.js-light'
 import toFormat from 'toformat'
-import { timeframeOptions, WAVAX_ADDRESS } from '../constants'
+import { timeframeOptions, WAVAX_ADDRESS, EXPLORER } from '../constants'
 import Numeral from 'numeral'
 
 // format libraries
@@ -313,11 +313,13 @@ export const setThemeColor = (theme) => document.documentElement.style.setProper
 
 export const Big = (number) => new BigNumber(number)
 
-export const urls = {
-  showTransaction: (tx) => `https://cchain.explorer.avax.network/tx/${tx}/`,
-  showAddress: (address) => `https://cchain.explorer.avax.network/address/${address}/`,
-  showToken: (address) => `https://cchain.explorer.avax.network/token/${address}/`,
-  showBlock: (block) => `https://cchain.explorer.avax.network/blocks/${block}/`
+export const urls = (chainId) => {
+  return {
+    showTransaction: (tx) => `${EXPLORER[chainId]}/tx/${tx}/`,
+    showAddress: (address) => `${EXPLORER[chainId]}/address/${address}/`,
+    showToken: (address) => `${EXPLORER[chainId]}/token/${address}/`,
+    showBlock: (block) => `${EXPLORER[chainId]}/blocks/${block}/`
+  }
 }
 
 export const formatTime = (unix) => {

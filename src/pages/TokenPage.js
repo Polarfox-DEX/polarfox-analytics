@@ -30,7 +30,7 @@ import { Hover, PageWrapper, ContentWrapper, StyledIcon } from '../components'
 import { PlusCircle, Bookmark } from 'react-feather'
 import FormattedName from '../components/FormattedName'
 import { useListedTokens } from '../contexts/Application'
-import { DEFAULT_DECIMALS, CUSTOM_DECIMALS_TOKENS } from '../constants'
+import { DEFAULT_DECIMALS, CUSTOM_DECIMALS_TOKENS, EXPLORER } from '../constants'
 import { useChainId } from '../contexts/Application'
 
 const DashboardWrapper = styled.div`
@@ -191,12 +191,7 @@ function TokenPage({ address, history }) {
               <BasicLink to="/tokens">{'Tokens '}</BasicLink>→ {symbol}
               {'  '}
             </TYPE.body>
-            <Link
-              style={{ width: 'fit-content' }}
-              color={backgroundColor}
-              external
-              href={'https://cchain.explorer.avax.network/address/' + address}
-            >
+            <Link style={{ width: 'fit-content' }} color={backgroundColor} external href={`${EXPLORER[chainId]}/address/${address}`}>
               <Text style={{ marginLeft: '.15rem' }} fontSize={'14px'} fontWeight={400}>
                 ({address.slice(0, 8) + '...' + address.slice(36, 42)})
               </Text>
@@ -385,7 +380,7 @@ function TokenPage({ address, history }) {
                     </AutoRow>
                   </Column>
                   <ButtonLight color={backgroundColor}>
-                    <Link color={backgroundColor} external href={'https://cchain.explorer.avax.network/address/' + address}>
+                    <Link color={backgroundColor} external href={`${EXPLORER[chainId]}/address/${address}`}>
                       View on the C-Chain Explorer ↗
                     </Link>
                   </ButtonLight>

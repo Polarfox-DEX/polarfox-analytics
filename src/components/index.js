@@ -36,10 +36,11 @@ const Hint = ({ children, ...rest }) => (
   </Text>
 )
 
-const Address = ({ address, token, ...rest }) => (
+// TODO: Is this used anywhere?
+const Address = ({ address, token, chainId, ...rest }) => (
   <Link
     color="button"
-    href={token ? urls.showToken(address) : urls.showAddress(address)}
+    href={token ? urls(chainId).showToken(address) : urls(chainId).showAddress(address)}
     external
     style={{ wordBreak: 'break-all' }}
     {...rest}

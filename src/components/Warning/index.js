@@ -9,6 +9,8 @@ import { AutoColumn } from '../Column'
 import { Hover } from '..'
 import Link from '../Link'
 import { useMedia } from 'react-use'
+import { useChainId } from '../../contexts/Application'
+import { EXPLORER } from '../../constants'
 
 const WarningWrapper = styled.div`
   border-radius: 20px;
@@ -33,6 +35,7 @@ const StyledWarningIcon = styled(AlertTriangle)`
 `
 
 export default function Warning({ type, show, setShow, address }) {
+  const { chainId } = useChainId()
   const below800 = useMedia('(max-width: 800px)')
 
   const textContent = below800 ? (
@@ -71,7 +74,7 @@ export default function Warning({ type, show, setShow, address }) {
                 fontWeight={500}
                 lineHeight={'145.23%'}
                 color={'#2172E5'}
-                href={'https://cchain.explorer.avax.network/address/' + address}
+                href={`${EXPLORER[chainId]}/address/${address}`}
                 target="_blank"
               >
                 View {type === 'token' ? 'token' : 'pair'} contract on C-Chain explorer
@@ -91,7 +94,7 @@ export default function Warning({ type, show, setShow, address }) {
                 fontWeight={500}
                 lineHeight={'145.23%'}
                 color={'#2172E5'}
-                href={'https://cchain.explorer.avax.network/address/' + address} // TODO: should depend on chainID, as well as all other instances of the C-chain explorer
+                href={`${EXPLORER[chainId]}/address/${address}`}
                 target="_blank"
               >
                 View {type === 'token' ? 'token' : 'pair'} contract on C-Chain explorer

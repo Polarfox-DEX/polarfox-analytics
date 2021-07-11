@@ -27,7 +27,7 @@ import { Hover } from '../components'
 import { useAvaxPrice } from '../contexts/GlobalData'
 import Warning from '../components/Warning'
 import { usePathDismissed, useSavedPairs } from '../contexts/LocalStorage'
-import { CUSTOM_DECIMALS_TOKENS, DEFAULT_DECIMALS } from '../constants'
+import { CUSTOM_DECIMALS_TOKENS, DEFAULT_DECIMALS, EXPLORER } from '../constants'
 
 import { Bookmark, PlusCircle } from 'react-feather'
 import FormattedName from '../components/FormattedName'
@@ -223,12 +223,7 @@ function PairPage({ pairAddress, history }) {
             <TYPE.body>
               <BasicLink to="/pairs">{'Pairs '}</BasicLink>→ {token0?.symbol}-{token1?.symbol}{' '}
             </TYPE.body>
-            <Link
-              style={{ width: 'fit-content' }}
-              color={backgroundColor}
-              external
-              href={'https://cchain.explorer.avax.network/address/' + pairAddress}
-            >
+            <Link style={{ width: 'fit-content' }} color={backgroundColor} external href={`${EXPLORER[chainId]}/address/${pairAddress}`}>
               <Text style={{ marginLeft: '.15rem' }} fontSize={'14px'} fontWeight={400}>
                 ({pairAddress.slice(0, 8) + '...' + pairAddress.slice(36, 42)})
               </Text>
@@ -487,7 +482,7 @@ function PairPage({ pairAddress, history }) {
                     </AutoRow>
                   </Column>
                   <ButtonLight color={backgroundColor}>
-                    <Link color={backgroundColor} external href={'https://cchain.explorer.avax.network/address/' + pairAddress}>
+                    <Link color={backgroundColor} external href={`${EXPLORER[chainId]}/address/${pairAddress}`}>
                       View on the C-Chain Explorer ↗
                     </Link>
                   </ButtonLight>
