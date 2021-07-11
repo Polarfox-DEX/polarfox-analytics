@@ -358,6 +358,11 @@ const getTokenData = async (address, avaxPrice, avaxPriceOld, chainId) => {
       twoDayData?.tradeVolumeAVAX * avaxPrice ?? 0
     )
 
+    // Calculate untracked volume
+    data.untrackedVolumeUSD = data.untrackedVolumeAVAX * avaxPrice
+    oneDayData.untrackedVolumeUSD = oneDayData.untrackedVolumeAVAX * avaxPrice
+    twoDayData.untrackedVolumeUSD = twoDayData.untrackedVolumeAVAX * avaxPrice
+
     // calculate percentage changes and daily changes
     const [oneDayVolumeUT, volumeChangeUT] = get2DayPercentChange(
       data.untrackedVolumeUSD,

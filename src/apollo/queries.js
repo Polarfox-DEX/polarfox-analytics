@@ -430,6 +430,7 @@ export const GLOBAL_DATA = ({ block, chainId }) => {
         id
         totalVolumeAVAX
         totalLiquidityAVAX
+        untrackedVolumeAVAX
         txCount
         pairCount
       }
@@ -633,7 +634,7 @@ const PairFields = `
     trackedReserveAVAX
     volumeAVAX
     volumeUSD
-    untrackedVolumeUSD
+    untrackedVolumeAVAX
     token0Price
     token1Price
     createdAtTimestamp
@@ -707,7 +708,7 @@ export const PAIRS_HISTORICAL_BULK = (block, pairs) => {
       trackedReserveAVAX
       volumeAVAX
       volumeUSD
-      untrackedVolumeUSD
+      untrackedVolumeAVAX
     }
   }
   `
@@ -737,7 +738,7 @@ const TokenFields = `
     tradeVolume
     tradeVolumeAVAX
     tradeVolumeUSD
-    untrackedVolumeUSD
+    untrackedVolumeAVAX
     totalLiquidity
     txCount
   }

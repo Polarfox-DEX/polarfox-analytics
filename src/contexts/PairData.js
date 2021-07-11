@@ -265,6 +265,11 @@ async function getBulkPairData(pairList, avaxPrice, chainId) {
 }
 
 function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayBlock) {
+  // Calculate untracked volume
+  data.untrackedVolumeUSD = data.untrackedVolumeAVAX * avaxPrice
+  oneDayData.untrackedVolumeUSD = oneDayData.untrackedVolumeAVAX * avaxPrice
+  twoDayData.untrackedVolumeUSD = twoDayData.untrackedVolumeAVAX * avaxPrice
+
   // get volume changes
   const [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
     data?.volumeAVAX * avaxPrice,
@@ -272,9 +277,9 @@ function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayB
     twoDayData?.volumeAVAX ? twoDayData.volumeAVAX * avaxPrice : 0
   )
   const [oneDayVolumeUntracked, volumeChangeUntracked] = get2DayPercentChange(
-    data?.untrackedVolumeUSD, // TODO: Update, replace with untrackedVolumeAVAX * avaxPrice
-    oneDayData?.untrackedVolumeUSD ? parseFloat(oneDayData?.untrackedVolumeUSD) : 0, // TODO: Update, replace with untrackedVolumeAVAX * avaxPrice
-    twoDayData?.untrackedVolumeUSD ? twoDayData?.untrackedVolumeUSD : 0 // TODO: Update, replace with untrackedVolumeAVAX * avaxPrice
+    data?.untrackedVolumeUSD,
+    oneDayData?.untrackedVolumeUSD ? parseFloat(oneDayData?.untrackedVolumeUSD) : 0,
+    twoDayData?.untrackedVolumeUSD ? twoDayData?.untrackedVolumeUSD : 0
   )
   const oneWeekVolumeUSD = parseFloat(oneWeekData ? (data?.volumeUSD - oneWeekData?.volumeUSD) * avaxPrice : data.volumeUSD * avaxPrice)
 
