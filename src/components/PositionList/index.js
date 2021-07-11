@@ -159,11 +159,11 @@ function PositionList({ positions }) {
             </CustomLink>
 
             <RowFixed gap="8px" justify="flex-start">
-              <Link external href={getPoolLink(position.pair.token0.id, position.pair.token1.id, chainId)} style={{ marginRight: '.5rem' }}>
+              <Link external href={getPoolLink(chainId, position.pair.token0.id, position.pair.token1.id)} style={{ marginRight: '.5rem' }}>
                 <ButtonLight style={{ padding: '4px 6px', borderRadius: '4px' }}>Add</ButtonLight>
               </Link>
               {poolOwnership > 0 && (
-                <Link external href={getPoolLink(position.pair.token0.id, position.pair.token1.id, true, chainId)}>
+                <Link external href={getPoolLink(chainId, position.pair.token0.id, position.pair.token1.id, true)}>
                   <ButtonLight style={{ padding: '4px 6px', borderRadius: '4px' }}>Remove</ButtonLight>
                 </Link>
               )}

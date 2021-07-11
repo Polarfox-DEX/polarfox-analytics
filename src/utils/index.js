@@ -8,7 +8,7 @@ import { GET_BLOCK, GET_BLOCKS, GET_BLOCK_BEFORE, GET_BLOCK_AFTER, SHARE_VALUE }
 import { Text } from 'rebass'
 import _Decimal from 'decimal.js-light'
 import toFormat from 'toformat'
-import { timeframeOptions, WAVAX_ADDRESS, EXPLORER } from '../constants'
+import { timeframeOptions, WAVAX_ADDRESS, EXPLORER, DEX } from '../constants'
 import Numeral from 'numeral'
 
 // format libraries
@@ -37,16 +37,12 @@ export function getTimeframe(timeWindow) {
   return utcStartTime
 }
 
-export function getPoolLink(token0Address, token1Address = null, remove = false, chainId) {
+export function getPoolLink(chainId, token0Address, token1Address = null, remove = false) {
   if (!token1Address) {
-    return (
-      `https://dex.polarfox.io/#/` +
-      (remove ? `remove` : `add`) +
-      `/${token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address}/${'AVAX'}`
-    )
+    return `${DEX}/#/` + (remove ? `remove` : `add`) + `/${token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address}/${'AVAX'}`
   } else {
     return (
-      `https://dex.polarfox.io/#/` +
+      `${DEX}/#/` +
       (remove ? `remove` : `add`) +
       `/${token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address}/${
         token1Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token1Address
@@ -55,13 +51,13 @@ export function getPoolLink(token0Address, token1Address = null, remove = false,
   }
 }
 
-export function getSwapLink(token0Address, token1Address = null, chainId) {
+export function getSwapLink(chainId, token0Address, token1Address = null) {
   if (!token1Address) {
-    return `https://dex.polarfox.io/#/swap?inputCurrency=${token0Address}`
+    return `${DEX}/#/swap?inputCurrency=${token0Address}`
   } else {
-    return `https://dex.polarfox.io/#/swap?inputCurrency=${
-      token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address
-    }&outputCurrency=${token1Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token1Address}`
+    return `${DEX}/#/swap?inputCurrency=${token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address}&outputCurrency=${
+      token1Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token1Address
+    }`
   }
 }
 

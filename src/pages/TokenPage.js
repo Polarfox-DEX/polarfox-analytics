@@ -243,10 +243,10 @@ function TokenPage({ address, history }) {
                   ) : (
                     <></>
                   )}
-                  <Link href={getPoolLink(address, chainId)} target="_blank">
+                  <Link href={getPoolLink(chainId, address)} target="_blank">
                     <ButtonLight color={backgroundColor}>+ Add Liquidity</ButtonLight>
                   </Link>
-                  <Link href={getSwapLink(address, chainId)} target="_blank">
+                  <Link href={getSwapLink(chainId, address)} target="_blank">
                     <ButtonDark ml={'.5rem'} mr={below1080 && '.5rem'} color={backgroundColor}>
                       Trade
                     </ButtonDark>

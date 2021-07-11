@@ -280,10 +280,10 @@ function PairPage({ pairAddress, history }) {
                     <></>
                   )}
 
-                  <Link external href={getPoolLink(token0?.id, token1?.id, chainId)}>
+                  <Link external href={getPoolLink(chainId, token0?.id, token1?.id)}>
                     <ButtonLight color={backgroundColor}>+ Add Liquidity</ButtonLight>
                   </Link>
-                  <Link external href={getSwapLink(token0?.id, token1?.id, chainId)}>
+                  <Link external href={getSwapLink(chainId, token0?.id, token1?.id)}>
                     <ButtonDark ml={!below1080 && '.5rem'} mr={below1080 && '.5rem'} color={backgroundColor}>
                       Trade
                     </ButtonDark>

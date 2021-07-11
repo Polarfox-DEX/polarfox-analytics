@@ -89,3 +89,5 @@ export const EXPLORER = {
   [CHAIN_ID.AVALANCHE]: 'https://cchain.explorer.avax.network',
   [CHAIN_ID.FUJI]: 'https://cchain.explorer.avax-test.network'
 }
+
+export const DEX = 'https://dex-test.polarfox.io' // TODO: Update to production
