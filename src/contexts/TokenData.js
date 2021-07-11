@@ -718,7 +718,7 @@ export function useTokenChartData(tokenAddress) {
       }
     }
     checkForChartData()
-  }, [chartData, tokenAddress, updateChartData, chainId])
+  }, [chartData, tokenAddress, updateChartData, chainId, avaxPrice])
   return chartData
 }
 
