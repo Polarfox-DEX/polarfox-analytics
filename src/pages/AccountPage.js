@@ -128,8 +128,7 @@ function AccountPage({ account }) {
   const [showDropdown, setShowDropdown] = useState(false)
   const [activePosition, setActivePosition] = useState()
 
-  // TODO: Fix the warning below
-  const dynamicPositions = activePosition ? [activePosition] : positions
+  let dynamicPositions = useMemo(() => (activePosition ? [activePosition] : positions), [activePosition, positions])
 
   const aggregateFees = dynamicPositions?.reduce(function (total, position) {
     return total + position.fees.sum
