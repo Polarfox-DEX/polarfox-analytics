@@ -198,28 +198,27 @@ export async function getMostRecentBlockSinceTimestamp(timestamp, chainId, skipC
   return block
 }
 
-// TODO: Seems like this function is not used anywhere
-export async function getLiquidityTokenBalanceOvertime(account, timestamps, chainId) {
-  // get blocks based on timestamps
-  const blocks = await getBlocksFromTimestamps(timestamps, chainId)
+// export async function getLiquidityTokenBalanceOvertime(account, timestamps, chainId) {
+//   // get blocks based on timestamps
+//   const blocks = await getBlocksFromTimestamps(timestamps, chainId)
 
-  // get historical share values with time travel queries
-  let result = await client(chainId).query({
-    query: SHARE_VALUE(account, blocks),
-    fetchPolicy: 'cache-first'
-  })
+//   // get historical share values with time travel queries
+//   let result = await client(chainId).query({
+//     query: SHARE_VALUE(account, blocks),
+//     fetchPolicy: 'cache-first'
+//   })
 
-  let values = []
-  for (var row in result?.data) {
-    let timestamp = row.split('t')[1]
-    if (timestamp) {
-      values.push({
-        timestamp,
-        balance: 0
-      })
-    }
-  }
-}
+//   let values = []
+//   for (var row in result?.data) {
+//     let timestamp = row.split('t')[1]
+//     if (timestamp) {
+//       values.push({
+//         timestamp,
+//         balance: 0
+//       })
+//     }
+//   }
+// }
 
 /**
  * @notice Example query using time travel queries
