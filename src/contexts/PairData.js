@@ -265,23 +265,18 @@ async function getBulkPairData(pairList, avaxPrice, chainId) {
 }
 
 function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayBlock) {
-  // Calculate untracked volume
-  data.untrackedVolumeUSD = data.untrackedVolumeAVAX * avaxPrice
-  oneDayData.untrackedVolumeUSD = oneDayData.untrackedVolumeAVAX * avaxPrice
-  twoDayData.untrackedVolumeUSD = twoDayData.untrackedVolumeAVAX * avaxPrice
-
   // get volume changes
   const [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
-    data?.volumeAVAX * avaxPrice,
+    data?.volumeAVAX ? data.volumeAVAX * avaxPrice : 0,
     oneDayData?.volumeAVAX ? oneDayData.volumeAVAX * avaxPrice : 0,
     twoDayData?.volumeAVAX ? twoDayData.volumeAVAX * avaxPrice : 0
   )
   const [oneDayVolumeUntracked, volumeChangeUntracked] = get2DayPercentChange(
-    data?.untrackedVolumeUSD,
-    oneDayData?.untrackedVolumeUSD ? parseFloat(oneDayData?.untrackedVolumeUSD) : 0,
-    twoDayData?.untrackedVolumeUSD ? twoDayData?.untrackedVolumeUSD : 0
+    data?.untrackedVolumeAVAX ? data.untrackedVolumeAVAX * avaxPrice : 0,
+    oneDayData?.untrackedVolumeAVAX ? oneDayData.untrackedVolumeAVAX * avaxPrice : 0,
+    twoDayData?.untrackedVolumeAVAX ? twoDayData.untrackedVolumeAVAX * avaxPrice : 0
   )
-  const oneWeekVolumeUSD = parseFloat(oneWeekData ? (data?.volumeUSD - oneWeekData?.volumeUSD) * avaxPrice : data.volumeUSD * avaxPrice)
+  const oneWeekVolumeUSD = parseFloat(oneWeekData ? (data?.volumeAVAX - oneWeekData?.volumeAVAX) * avaxPrice : data.volumeAVAX * avaxPrice)
 
   // set volume properties
   data.oneDayVolumeUSD = parseFloat(oneDayVolumeUSD)
@@ -295,9 +290,9 @@ function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayB
 
   // set liquidity properties
   data.trackedReserveUSD = data.trackedReserveAVAX * avaxPrice
-  data.liquidityChangeUSD = getPercentChange(data.reserveUSD * avaxPrice, oneDayData?.reserveUSD * avaxPrice)
+  data.liquidityChangeUSD = getPercentChange(data.reserveAVAX * avaxPrice, oneDayData?.reserveAVAX * avaxPrice)
 
-  // format if pair hasnt existed for a day or a week
+  // Format if pair has not existed for a day or a week
   if (!oneDayData && data && data.createdAtBlockNumber > oneDayBlock) {
     data.oneDayVolumeUSD = parseFloat(data.volumeAVAX) * avaxPrice
   }
@@ -332,13 +327,13 @@ const getPairTransactions = async (pairAddress, chainId) => {
     let avaxPrice = await getCurrentAvaxPrice()
 
     for (let i = 0; i < transactions.mints.length; i++) {
-      transactions.mints[i].amountUSD = (parseFloat(transactions.mints[i].amountUSD) * avaxPrice).toString()
+      transactions.mints[i].amountUSD = (parseFloat(transactions.mints[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < transactions.burns.length; i++) {
-      transactions.burns[i].amountUSD = (parseFloat(transactions.burns[i].amountUSD) * avaxPrice).toString()
+      transactions.burns[i].amountUSD = (parseFloat(transactions.burns[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < transactions.swaps.length; i++) {
-      transactions.swaps[i].amountUSD = (parseFloat(transactions.swaps[i].amountUSD) * avaxPrice).toString()
+      transactions.swaps[i].amountUSD = (parseFloat(transactions.swaps[i].amountAVAX) * avaxPrice).toString()
     }
   } catch (e) {
     console.log(e)
@@ -380,14 +375,17 @@ const getPairChartData = async (pairAddress, chainId) => {
       // add the day index to the set of days
       dayIndexSet.add((data[i].date / oneDay).toFixed(0))
       dayIndexArray.push(data[i])
-      dayData.dailyVolumeUSD = parseFloat(dayData.dailyVolumeAVAX) * avaxPrice
-      dayData.reserveUSD = parseFloat(dayData.reserveAVAX) * avaxPrice
+      dayData.dailyVolumeAVAX = parseFloat(dayData.dailyVolumeAVAX)
+      dayData.dailyVolumeUSD = dayData.dailyVolumeAVAX * avaxPrice
+      dayData.reserveAVAX = parseFloat(dayData.reserveAVAX)
+      dayData.reserveUSD = dayData.reserveAVAX * avaxPrice
     })
 
     if (data[0]) {
       // fill in empty days
       let timestamp = data[0].date ? data[0].date : startTime
-      let latestLiquidityUSD = data[0].reserveUSD
+      let latestLiquidityAVAX = data[0].reserveAVAX
+      let latestLiquidityUSD = latestLiquidityAVAX * avaxPrice
       let index = 1
       while (timestamp < utcEndTime.unix() - oneDay) {
         const nextDay = timestamp + oneDay
@@ -396,11 +394,14 @@ const getPairChartData = async (pairAddress, chainId) => {
           data.push({
             date: nextDay,
             dayString: nextDay,
+            dailyVolumeAVAX: 0,
             dailyVolumeUSD: 0,
+            reserveAVAX: latestLiquidityAVAX,
             reserveUSD: latestLiquidityUSD
           })
         } else {
-          latestLiquidityUSD = dayIndexArray[index].reserveUSD
+          latestLiquidityAVAX = dayIndexArray[index].reserveAVAX
+          latestLiquidityUSD = latestLiquidityAVAX * avaxPrice
           index = index + 1
         }
         timestamp = nextDay
@@ -416,8 +417,8 @@ const getPairChartData = async (pairAddress, chainId) => {
       } else {
         latestAvaxPrice = await getAvaxPriceAtDate(data[j].date)
       }
-      data[j].dailyVolumeUSD = data[j].dailyVolumeUSD * latestAvaxPrice
-      data[j].reserveUSD = data[j].reserveUSD * latestAvaxPrice
+      data[j].dailyVolumeUSD = data[j].dailyVolumeAVAX * latestAvaxPrice
+      data[j].reserveUSD = data[j].reserveAVAX * latestAvaxPrice
     }
   } catch (e) {
     console.log(e)

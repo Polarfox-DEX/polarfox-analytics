@@ -534,7 +534,7 @@ const getIntervalTokenData = async (tokenAddress, startTime, interval = 3600, la
   }
 }
 
-const getTokenChartData = async (tokenAddress, chainId) => {
+const getTokenChartData = async (tokenAddress, avaxPrice, chainId) => {
   let data = []
   const utcEndTime = dayjs.utc()
   let utcStartTime = utcEndTime.subtract(1, 'year')
@@ -572,7 +572,8 @@ const getTokenChartData = async (tokenAddress, chainId) => {
     // fill in empty days
     let timestamp = data[0] && data[0].date ? data[0].date : startTime
     let latestLiquidityAVAX = data[0] && data[0].totalLiquidityAVAX
-    let latestPriceUSD = data[0] && data[0].priceUSD
+    let latestPriceAVAX = data[0] && data[0].priceAVAX
+    let latestPriceUSD = latestPriceAVAX * avaxPrice
     let index = 1
     while (timestamp < utcEndTime.startOf('minute').unix() - oneDay) {
       const nextDay = timestamp + oneDay
@@ -582,11 +583,13 @@ const getTokenChartData = async (tokenAddress, chainId) => {
           date: nextDay,
           dayString: nextDay,
           dailyVolumeAVAX: 0,
+          priceAVAX: latestPriceAVAX,
           priceUSD: latestPriceUSD,
           totalLiquidityAVAX: latestLiquidityAVAX
         })
       } else {
         latestLiquidityAVAX = dayIndexArray[index].totalLiquidityAVAX
+        latestPriceAVAX = dayIndexArray[index].priceAVAX
         latestPriceUSD = dayIndexArray[index].priceUSD
         index = index + 1
       }
@@ -601,7 +604,7 @@ const getTokenChartData = async (tokenAddress, chainId) => {
       } else {
         latestAvaxPrice = await getAvaxPriceAtDate(data[j].date)
       }
-      // data[j].priceUSD = data[j].priceUSD // TODO: Replace with priceAVAX for now or keep priceUSD?
+      data[j].priceUSD = data[j].priceAVAX * latestAvaxPrice
       data[j].totalLiquidityUSD = data[j].totalLiquidityAVAX * latestAvaxPrice
       data[j].dailyVolumeUSD = data[j].dailyVolumeAVAX * latestAvaxPrice
     }
@@ -704,12 +707,13 @@ export function useTokenPairs(tokenAddress) {
 
 export function useTokenChartData(tokenAddress) {
   const { chainId } = useChainId()
+  const [avaxPrice] = useAvaxPrice()
   const [state, { updateChartData }] = useTokenDataContext()
   const chartData = state?.[tokenAddress]?.chartData
   useEffect(() => {
     async function checkForChartData() {
       if (!chartData) {
-        let data = await getTokenChartData(tokenAddress, chainId)
+        let data = await getTokenChartData(tokenAddress, avaxPrice, chainId)
         updateChartData(tokenAddress, data)
       }
     }

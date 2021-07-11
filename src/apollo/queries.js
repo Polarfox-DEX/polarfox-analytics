@@ -193,6 +193,7 @@ export const USER = (block, account) => {
 export const USER_MINTS_BUNRS_PER_PAIR = gql`
   query events($user: Bytes!, $pair: Bytes!) {
     mints(where: { to: $user, pair: $pair }) {
+      amountAVAX
       amountUSD
       amount0
       amount1
@@ -207,6 +208,7 @@ export const USER_MINTS_BUNRS_PER_PAIR = gql`
       }
     }
     burns(where: { sender: $user, pair: $pair }) {
+      amountAVAX
       amountUSD
       amount0
       amount1
@@ -720,7 +722,7 @@ export const TOKEN_CHART = gql`
     tokenDayDatas(first: 1000, skip: $skip, orderBy: date, orderDirection: asc, where: { token: $tokenAddr }) {
       id
       date
-      priceUSD
+      priceAVAX
       totalLiquidityToken
       totalLiquidityAVAX
       dailyVolumeAVAX
