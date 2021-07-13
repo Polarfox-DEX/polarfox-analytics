@@ -2,9 +2,8 @@ import React from 'react'
 import styled from 'styled-components'
 import { Text, Box } from 'rebass'
 
-import Link from './Link'
-
-import { urls } from '../utils'
+// import Link from './Link'
+// import { urls } from '../utils'
 
 const Divider = styled(Box)`
   height: 1px;
@@ -36,17 +35,17 @@ const Hint = ({ children, ...rest }) => (
   </Text>
 )
 
-const Address = ({ address, token, ...rest }) => (
-  <Link
-    color="button"
-    href={token ? urls.showToken(address) : urls.showAddress(address)}
-    external
-    style={{ wordBreak: 'break-all' }}
-    {...rest}
-  >
-    {address}
-  </Link>
-)
+// const Address = ({ address, token, chainId, ...rest }) => (
+//   <Link
+//     color="button"
+//     href={token ? urls(chainId).showToken(address) : urls(chainId).showAddress(address)}
+//     external
+//     style={{ wordBreak: 'break-all' }}
+//     {...rest}
+//   >
+//     {address}
+//   </Link>
+// )
 
 export const Hover = styled.div`
   :hover {
@@ -179,4 +178,5 @@ export const FixedMenu = styled.div`
   }
 `
 
-export { Hint, Divider, Address, EmptyCard }
+// export { Hint, Divider, Address, EmptyCard }
+export { Hint, Divider, EmptyCard }

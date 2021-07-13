@@ -3,11 +3,7 @@ import { client } from '../apollo/client'
 import dayjs from 'dayjs'
 import { getShareValueOverTime } from '.'
 
-// TODO: Update the below
-export const priceOverrides = [
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
-  '0x6b175474e89094c44da98b954eedeac495271d0f' // DAI
-]
+export const priceOverrides = []
 
 interface ReturnMetrics {
   hodleReturn: number // difference in asset values t0 -> t1 with t0 deposit amounts
@@ -39,25 +35,16 @@ function formatPricesForEarlyTimestamps(position): Position {
     if (priceOverrides.includes(position?.pair?.token1.id)) {
       position.token1PriceUSD = 1
     }
-    // WAVAX price
-    if (position.pair?.token0.id === '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2') {
-      // TODO: Hardcoded value, update
-      position.token0PriceUSD = 203
-    }
-    if (position.pair?.token1.id === '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2') {
-      // TODO: Hardcoded value, update
-      position.token1PriceUSD = 203
-    }
   }
   return position
 }
 
-async function getPrincipalForUserPerPair(user: string, pairAddress: string) {
+async function getPrincipalForUserPerPair(user: string, pairAddress: string, chainId: number) {
   let usd = 0
   let amount0 = 0
   let amount1 = 0
   // get all minst and burns to get principal amounts
-  const results = await client.query({
+  const results = await client(chainId).query({
     query: USER_MINTS_BUNRS_PER_PAIR,
     variables: {
       user,
@@ -112,12 +99,12 @@ export function getMetricsForPositionWindow(positionT0: Position, positionT1: Po
   positionT1 = formatPricesForEarlyTimestamps(positionT1)
 
   // calculate ownership at ends of window, for end of window we need original LP token balance / new total supply
-  // eslint-disable-next-line eqeqeq
   const t0Ownership =
-    positionT0.liquidityTokenTotalSupply !== 0 ? positionT0.liquidityTokenBalance / positionT0.liquidityTokenTotalSupply : 0
-  // eslint-disable-next-line eqeqeq
+    // eslint-disable-next-line eqeqeq
+    positionT0.liquidityTokenTotalSupply != 0 ? positionT0.liquidityTokenBalance / positionT0.liquidityTokenTotalSupply : 0
   const t1Ownership =
-    positionT1.liquidityTokenTotalSupply !== 0 ? positionT0.liquidityTokenBalance / positionT1.liquidityTokenTotalSupply : 0
+    // eslint-disable-next-line eqeqeq
+    positionT1.liquidityTokenTotalSupply != 0 ? positionT0.liquidityTokenBalance / positionT1.liquidityTokenTotalSupply : 0
 
   // get starting amounts of token0 and token1 deposited by LP
   const token0_amount_t0 = t0Ownership * positionT0.reserve0
@@ -136,9 +123,13 @@ export function getMetricsForPositionWindow(positionT0: Position, positionT1: Po
   const token1_amount_no_fees = Number(positionT1.token1PriceUSD) && priceRatioT1 ? sqrK_t0 / Math.sqrt(priceRatioT1) : 0
   const no_fees_usd = token0_amount_no_fees * positionT1.token0PriceUSD + token1_amount_no_fees * positionT1.token1PriceUSD
 
-  const difference_fees_token0 = token0_amount_t1 - token0_amount_no_fees
-  const difference_fees_token1 = token1_amount_t1 - token1_amount_no_fees
-  const difference_fees_usd = difference_fees_token0 * positionT1.token0PriceUSD + difference_fees_token1 * positionT1.token1PriceUSD
+  // eslint-disable-next-line eqeqeq
+  const difference_fees_token0 = token0_amount_t1 != 0 ? token0_amount_t1 - token0_amount_no_fees : 0
+  // eslint-disable-next-line eqeqeq
+  const difference_fees_token1 = token1_amount_t1 != 0 ? token1_amount_t1 - token1_amount_no_fees : 0
+  const difference_fees_usd_unchecked =
+    difference_fees_token0 * positionT1.token0PriceUSD + difference_fees_token1 * positionT1.token1PriceUSD
+  const difference_fees_usd = !Number.isNaN(difference_fees_usd_unchecked) ? difference_fees_usd_unchecked : 0
 
   // calculate USD value at t0 and t1 using initial token deposit amounts for asset return
   const assetValueT0 = token0_amount_t0 * positionT0.token0PriceUSD + token1_amount_t0 * positionT0.token1PriceUSD
@@ -167,8 +158,8 @@ export function getMetricsForPositionWindow(positionT0: Position, positionT1: Po
  * @param pairSnapshots // history of entries and exits for lp on this pair
  * @param currentAVAXPrice // current price of AVAX used for USD conversions
  */
-export async function getHistoricalPairReturns(startDateTimestamp, currentPairData, pairSnapshots, currentAVAXPrice) {
-  // catch case where data not puplated yet
+export async function getHistoricalPairReturns(startDateTimestamp, currentPairData, pairSnapshots, currentAVAXPrice, chainId: number) {
+  // Catch case where data not populated yet
   if (!currentPairData.createdAtTimestamp) {
     return []
   }
@@ -190,7 +181,7 @@ export async function getHistoricalPairReturns(startDateTimestamp, currentPairDa
     dayIndex = dayIndex + 1
   }
 
-  const shareValues = await getShareValueOverTime(currentPairData.id, dayTimestamps)
+  const shareValues = await getShareValueOverTime(currentPairData.id, dayTimestamps, chainId)
   const shareValuesFormatted = {}
   shareValues?.map((share) => {
     shareValuesFormatted[share.timestamp] = share
@@ -259,9 +250,9 @@ export async function getHistoricalPairReturns(startDateTimestamp, currentPairDa
  * @param pair
  * @param avaxPrice
  */
-export async function getLPReturnsOnPair(user: string, pair, avaxPrice: number, snapshots) {
+export async function getLPReturnsOnPair(user: string, pair, avaxPrice: number, snapshots, chainId: number) {
   // initialize values
-  const principal = await getPrincipalForUserPerPair(user, pair.id)
+  const principal = await getPrincipalForUserPerPair(user, pair.id, chainId)
   let hodlReturn = 0
   let netReturn = 0
   let uniswapReturn = 0
@@ -278,7 +269,7 @@ export async function getLPReturnsOnPair(user: string, pair, avaxPrice: number, 
     liquidityTokenTotalSupply: pair.totalSupply,
     reserve0: pair.reserve0,
     reserve1: pair.reserve1,
-    reserveUSD: pair.reserveUSD * avaxPrice,
+    reserveUSD: pair.reserveAVAX * avaxPrice,
     token0PriceUSD: pair.token0.derivedAVAX * avaxPrice,
     token1PriceUSD: pair.token1.derivedAVAX * avaxPrice
   }

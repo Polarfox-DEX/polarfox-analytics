@@ -103,7 +103,7 @@ const DataText = styled(Flex)`
 
 const SORT_FIELD = {
   VALUE: 'VALUE',
-  UNISWAP_RETURN: 'UNISWAP_RETURN',
+  UNISWAP_RETURN: 'UNISWAP_RETURN'
 }
 
 function MiningPositionList({ miningPositions }) {
@@ -176,21 +176,11 @@ function MiningPositionList({ miningPositions }) {
             <AutoColumn gap="4px" justify="flex-end">
               <RowFixed>
                 <TYPE.small fontWeight={400}>{formattedNum(pairPercentage * parseFloat(valueFirstPair))} </TYPE.small>
-                <FormattedName
-                  text={firstPairName}
-                  maxCharacters={below740 ? 10 : 18}
-                  margin={true}
-                  fontSize={'11px'}
-                />
+                <FormattedName text={firstPairName} maxCharacters={below740 ? 10 : 18} margin={true} fontSize={'11px'} />
               </RowFixed>
               <RowFixed>
                 <TYPE.small fontWeight={400}>{formattedNum(pairPercentage * parseFloat(valueSecondPair))} </TYPE.small>
-                <FormattedName
-                  text={secondPairName}
-                  maxCharacters={below740 ? 10 : 18}
-                  margin={true}
-                  fontSize={'11px'}
-                />
+                <FormattedName text={secondPairName} maxCharacters={below740 ? 10 : 18} margin={true} fontSize={'11px'} />
               </RowFixed>
             </AutoColumn>
           </AutoColumn>

@@ -18,29 +18,6 @@ export const SUBGRAPH_HEALTH = gql`
   }
 `
 
-export const V1_DATA_QUERY = gql`
-  query uniswap($date: Int!, $date2: Int!) {
-    current: uniswap(id: "1") {
-      totalVolumeUSD
-      totalLiquidityUSD
-      txCount
-    }
-    oneDay: uniswapHistoricalDatas(where: { timestamp_lt: $date }, first: 1, orderBy: timestamp, orderDirection: desc) {
-      totalVolumeUSD
-      totalLiquidityUSD
-      txCount
-    }
-    twoDay: uniswapHistoricalDatas(where: { timestamp_lt: $date2 }, first: 1, orderBy: timestamp, orderDirection: desc) {
-      totalVolumeUSD
-      totalLiquidityUSD
-      txCount
-    }
-    exchanges(first: 200, orderBy: avaxBalance, orderDirection: desc) {
-      avaxBalance
-    }
-  }
-`
-
 export const GET_BLOCK = gql`
   query blocks($timestampFrom: Int!, $timestampTo: Int!) {
     blocks(first: 1, orderBy: timestamp, orderDirection: asc, where: { timestamp_gt: $timestampFrom, timestamp_lt: $timestampTo }) {
@@ -90,6 +67,7 @@ export const POSITIONS_BY_BLOCK = (account, blocks) => {
           id
           totalSupply
           reserveUSD
+          reserveAVAX
         }
       }
     `
@@ -157,6 +135,7 @@ export const SHARE_VALUE = (pairAddress, blocks) => {
         reserve0
         reserve1
         reserveUSD
+        reserveAVAX
         totalSupply 
         token0{
           derivedAVAX
@@ -180,18 +159,18 @@ export const SHARE_VALUE = (pairAddress, blocks) => {
   return gql(queryString)
 }
 
-export const AVAX_PRICE = (block) => {
+export const AVAX_PRICE = (block, chainId) => {
   const queryString = block
     ? `
     query bundles {
-      bundles(where: { id: ${BUNDLE_ID} } block: {number: ${block}}) {
+      bundles(where: { id: ${BUNDLE_ID[chainId]} } block: {number: ${block}}) {
         id
         avaxPrice
       }
     }
   `
     : ` query bundles {
-      bundles(where: { id: ${BUNDLE_ID} }) {
+      bundles(where: { id: ${BUNDLE_ID[chainId]} }) {
         id
         avaxPrice
       }
@@ -214,6 +193,7 @@ export const USER = (block, account) => {
 export const USER_MINTS_BUNRS_PER_PAIR = gql`
   query events($user: Bytes!, $pair: Bytes!) {
     mints(where: { to: $user, pair: $pair }) {
+      amountAVAX
       amountUSD
       amount0
       amount1
@@ -228,6 +208,7 @@ export const USER_MINTS_BUNRS_PER_PAIR = gql`
       }
     }
     burns(where: { sender: $user, pair: $pair }) {
+      amountAVAX
       amountUSD
       amount0
       amount1
@@ -286,7 +267,7 @@ export const USER_POSITIONS = gql`
         id
         reserve0
         reserve1
-        reserveUSD
+        reserveAVAX
         token0 {
           id
           symbol
@@ -327,7 +308,7 @@ export const USER_TRANSACTIONS = gql`
       liquidity
       amount0
       amount1
-      amountUSD
+      amountAVAX
     }
     burns(orderBy: timestamp, orderDirection: desc, where: { sender: $user }) {
       id
@@ -349,7 +330,7 @@ export const USER_TRANSACTIONS = gql`
       liquidity
       amount0
       amount1
-      amountUSD
+      amountAVAX
     }
     swaps(orderBy: timestamp, orderDirection: desc, where: { to: $user }) {
       id
@@ -369,7 +350,7 @@ export const USER_TRANSACTIONS = gql`
       amount0Out
       amount1In
       amount1Out
-      amountUSD
+      amountAVAX
       to
     }
   }
@@ -382,7 +363,9 @@ export const PAIR_CHART = gql`
       date
       dailyVolumeToken0
       dailyVolumeToken1
+      dailyVolumeAVAX
       dailyVolumeUSD
+      reserveAVAX
       reserveUSD
     }
   }
@@ -395,8 +378,10 @@ export const PAIR_DAY_DATA = gql`
       date
       dailyVolumeToken0
       dailyVolumeToken1
+      dailyVolumeAVAX
       dailyVolumeUSD
       totalSupply
+      reserveAVAX
       reserveUSD
     }
   }
@@ -416,8 +401,10 @@ export const PAIR_DAY_DATA_BULK = (pairs, startTimestamp) => {
         date
         dailyVolumeToken0
         dailyVolumeToken1
+        dailyVolumeAVAX
         dailyVolumeUSD
         totalSupply
+        reserveAVAX
         reserveUSD
       }
     } 
@@ -430,26 +417,22 @@ export const GLOBAL_CHART = gql`
     polarfoxDayDatas(first: 1000, skip: $skip, where: { date_gt: $startTime }, orderBy: date, orderDirection: asc) {
       id
       date
-      totalVolumeUSD
-      dailyVolumeUSD
+      totalVolumeAVAX
       dailyVolumeAVAX
-      totalLiquidityUSD
       totalLiquidityAVAX
     }
   }
 `
 
-export const GLOBAL_DATA = (block) => {
+export const GLOBAL_DATA = ({ block, chainId }) => {
   const queryString = ` query polarfoxFactories {
       polarfoxFactories(
        ${block ? `block: { number: ${block}}` : ``} 
-       where: { id: "${FACTORY_ADDRESS}" }) {
+       where: { id: "${FACTORY_ADDRESS[chainId]}" }) {
         id
-        totalVolumeUSD
         totalVolumeAVAX
-        untrackedVolumeUSD
-        totalLiquidityUSD
         totalLiquidityAVAX
+        untrackedVolumeAVAX
         txCount
         pairCount
       }
@@ -479,6 +462,7 @@ export const GLOBAL_TXNS = gql`
         liquidity
         amount0
         amount1
+        amountAVAX
         amountUSD
       }
       burns(orderBy: timestamp, orderDirection: desc) {
@@ -500,6 +484,7 @@ export const GLOBAL_TXNS = gql`
         liquidity
         amount0
         amount1
+        amountAVAX
         amountUSD
       }
       swaps(orderBy: timestamp, orderDirection: desc) {
@@ -521,6 +506,7 @@ export const GLOBAL_TXNS = gql`
         amount0Out
         amount1In
         amount1Out
+        amountAVAX
         amountUSD
         to
       }
@@ -644,12 +630,13 @@ const PairFields = `
     }
     reserve0
     reserve1
+    reserveAVAX
     reserveUSD
     totalSupply
     trackedReserveAVAX
-    reserveAVAX
+    volumeAVAX
     volumeUSD
-    untrackedVolumeUSD
+    untrackedVolumeAVAX
     token0Price
     token1Price
     createdAtTimestamp
@@ -719,9 +706,11 @@ export const PAIRS_HISTORICAL_BULK = (block, pairs) => {
     pairs(first: 200, where: {id_in: ${pairsString}}, block: {number: ${block}}, orderBy: trackedReserveAVAX, orderDirection: desc) {
       id
       reserveUSD
+      reserveAVAX
       trackedReserveAVAX
+      volumeAVAX
       volumeUSD
-      untrackedVolumeUSD
+      untrackedVolumeAVAX
     }
   }
   `
@@ -733,13 +722,11 @@ export const TOKEN_CHART = gql`
     tokenDayDatas(first: 1000, skip: $skip, orderBy: date, orderDirection: asc, where: { token: $tokenAddr }) {
       id
       date
-      priceUSD
+      priceAVAX
       totalLiquidityToken
-      totalLiquidityUSD
       totalLiquidityAVAX
       dailyVolumeAVAX
       dailyVolumeToken
-      dailyVolumeUSD
     }
   }
 `
@@ -751,8 +738,9 @@ const TokenFields = `
     symbol
     derivedAVAX
     tradeVolume
+    tradeVolumeAVAX
     tradeVolumeUSD
-    untrackedVolumeUSD
+    untrackedVolumeAVAX
     totalLiquidity
     txCount
   }
@@ -818,6 +806,7 @@ export const FILTERED_TRANSACTIONS = gql`
       liquidity
       amount0
       amount1
+      amountAVAX
       amountUSD
     }
     burns(first: 20, where: { pair_in: $allPairs }, orderBy: timestamp, orderDirection: desc) {
@@ -839,6 +828,7 @@ export const FILTERED_TRANSACTIONS = gql`
       liquidity
       amount0
       amount1
+      amountAVAX
       amountUSD
     }
     swaps(first: 30, where: { pair_in: $allPairs }, orderBy: timestamp, orderDirection: desc) {
@@ -861,6 +851,7 @@ export const FILTERED_TRANSACTIONS = gql`
       amount0Out
       amount1In
       amount1Out
+      amountAVAX
       amountUSD
       to
     }

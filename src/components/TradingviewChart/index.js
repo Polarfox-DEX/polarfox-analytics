@@ -8,7 +8,6 @@ import { usePrevious } from 'react-use'
 import { Play } from 'react-feather'
 import { useDarkModeManager } from '../../contexts/LocalStorage'
 import { IconWrapper } from '..'
-import { useAvaxPrice } from '../../contexts/GlobalData'
 
 dayjs.extend(utc)
 
@@ -32,8 +31,6 @@ const TradingViewChart = ({ type = CHART_TYPES.BAR, data, base, baseChange, fiel
   const [chartCreated, setChartCreated] = useState(false)
   const dataPrev = usePrevious(data)
 
-  let avaxPrice = useAvaxPrice()[0]
-
   useEffect(() => {
     if (data !== dataPrev && chartCreated && type === CHART_TYPES.BAR) {
       // remove the tooltip element
@@ -45,13 +42,11 @@ const TradingViewChart = ({ type = CHART_TYPES.BAR, data, base, baseChange, fiel
     }
   }, [chartCreated, data, dataPrev, type])
 
-  console.log('Trading view data:', data)
-
   // parse the data and format for trading view consumption
   const formattedData = data?.map((entry) => {
     return {
       time: dayjs.unix(entry.date).utc().format('YYYY-MM-DD'),
-      value: parseFloat(entry[field]) * avaxPrice
+      value: parseFloat(entry[field])
     }
   })
 

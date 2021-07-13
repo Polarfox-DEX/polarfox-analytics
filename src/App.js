@@ -17,7 +17,7 @@ import SideNav from './components/SideNav'
 import AccountLookup from './pages/AccountLookup'
 import { OVERVIEW_TOKEN_BLACKLIST, PAIR_BLACKLIST } from './constants'
 import LocalLoader from './components/LocalLoader'
-import { useLatestBlocks } from './contexts/Application'
+import { useLatestBlocks, useChainId } from './contexts/Application'
 
 const AppWrapper = styled.div`
   position: relative;
@@ -96,6 +96,8 @@ const BLOCK_DIFFERENCE_THRESHOLD = 30
 
 function App() {
   const [savedOpen, setSavedOpen] = useState(false)
+  // TODO: Look at the URL parameters, so we can send the user directly to Fuji if he is on that blockchain
+  const { chainId } = useChainId()
 
   const globalData = useGlobalData()
   const globalChartData = useGlobalChartData()
@@ -104,16 +106,8 @@ function App() {
   // show warning
   const showWarning = headBlock && latestBlock ? headBlock - latestBlock > BLOCK_DIFFERENCE_THRESHOLD : false
 
-  // console.log('Useful data:')
-  // console.log('Latest block: ', latestBlock)
-  console.log('Global data:', globalData)
-  // console.log('Object.keys(globalData).length > 0', Object.keys(globalData).length > 0)
-  // console.log('globalChartData', globalChartData)
-  // console.log('Object.keys(globalChartData).length > 0', Object.keys(globalChartData).length > 0)
-  console.log('---')
-
   return (
-    <ApolloProvider client={client}>
+    <ApolloProvider client={client(chainId)}>
       <AppWrapper>
         {showWarning && (
           <WarningWrapper>
@@ -130,7 +124,7 @@ function App() {
                 strict
                 path="/token/:tokenAddress"
                 render={({ match }) => {
-                  if (OVERVIEW_TOKEN_BLACKLIST.includes(match.params.tokenAddress.toLowerCase())) {
+                  if (OVERVIEW_TOKEN_BLACKLIST[chainId].includes(match.params.tokenAddress.toLowerCase())) {
                     return <Redirect to="/home" />
                   }
                   if (isAddress(match.params.tokenAddress.toLowerCase())) {
@@ -149,7 +143,7 @@ function App() {
                 strict
                 path="/pair/:pairAddress"
                 render={({ match }) => {
-                  if (PAIR_BLACKLIST.includes(match.params.pairAddress.toLowerCase())) {
+                  if (PAIR_BLACKLIST[chainId].includes(match.params.pairAddress.toLowerCase())) {
                     return <Redirect to="/home" />
                   }
                   if (isAddress(match.params.pairAddress.toLowerCase())) {

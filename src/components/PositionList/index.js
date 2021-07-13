@@ -12,6 +12,7 @@ import { withRouter } from 'react-router-dom'
 import { formattedNum, getPoolLink } from '../../utils'
 import { AutoColumn } from '../Column'
 import { useAvaxPrice } from '../../contexts/GlobalData'
+import { useChainId } from '../../contexts/Application'
 import { RowFixed } from '../Row'
 import { ButtonLight } from '../ButtonStyled'
 import { TYPE } from '../../Theme'
@@ -108,6 +109,8 @@ const SORT_FIELD = {
 }
 
 function PositionList({ positions }) {
+  const { chainId } = useChainId()
+
   const below500 = useMedia('(max-width: 500px)')
   const below740 = useMedia('(max-width: 740px)')
 
@@ -139,7 +142,7 @@ function PositionList({ positions }) {
 
   const ListItem = ({ position, index }) => {
     const poolOwnership = position.liquidityTokenBalance / position.pair.totalSupply
-    const valueUSD = poolOwnership * position.pair.reserveUSD * avaxPrice
+    const valueUSD = poolOwnership * position.pair.reserveUSD
 
     return (
       <DashGrid style={{ opacity: poolOwnership > 0 ? 1 : 0.6 }} focus={true}>
@@ -156,11 +159,11 @@ function PositionList({ positions }) {
             </CustomLink>
 
             <RowFixed gap="8px" justify="flex-start">
-              <Link external href={getPoolLink(position.pair.token0.id, position.pair.token1.id)} style={{ marginRight: '.5rem' }}>
+              <Link external href={getPoolLink(chainId, position.pair.token0.id, position.pair.token1.id)} style={{ marginRight: '.5rem' }}>
                 <ButtonLight style={{ padding: '4px 6px', borderRadius: '4px' }}>Add</ButtonLight>
               </Link>
               {poolOwnership > 0 && (
-                <Link external href={getPoolLink(position.pair.token0.id, position.pair.token1.id, true)}>
+                <Link external href={getPoolLink(chainId, position.pair.token0.id, position.pair.token1.id, true)}>
                   <ButtonLight style={{ padding: '4px 6px', borderRadius: '4px' }}>Remove</ButtonLight>
                 </Link>
               )}

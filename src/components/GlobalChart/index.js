@@ -32,13 +32,6 @@ const GlobalChart = ({ display }) => {
   const [dailyData, weeklyData] = useGlobalChartData()
   const { totalLiquidityUSD, oneDayVolumeUSD, volumeChangeUSD, liquidityChangeUSD, oneWeekVolume, weeklyVolumeChange } = useGlobalData()
 
-  console.log('totalLiquidityUSD:', totalLiquidityUSD)
-  console.log('oneDayVolumeUSD:', oneDayVolumeUSD)
-  console.log('volumeChangeUSD:', volumeChangeUSD)
-  console.log('liquidityChangeUSD:', liquidityChangeUSD)
-  console.log('oneWeekVolume:', oneWeekVolume)
-  console.log('weeklyVolumeChange:', weeklyVolumeChange)
-
   // based on window, get start time
   let utcStartTime = getTimeframe(timeWindow)
 
@@ -52,7 +45,7 @@ const GlobalChart = ({ display }) => {
           if (item.date > utcStartTime) {
             return item
           } else {
-            return // TODO: Add 'undefined' to kill the array-callback-return warning. Is it reasonable?
+            return undefined
           }
         })
         .filter((item) => {
@@ -88,7 +81,7 @@ const GlobalChart = ({ display }) => {
             base={totalLiquidityUSD}
             baseChange={liquidityChangeUSD}
             title="Liquidity"
-            field="totalLiquidityAVAX"
+            field="totalLiquidityUSD"
             width={width}
             type={CHART_TYPES.AREA}
           />

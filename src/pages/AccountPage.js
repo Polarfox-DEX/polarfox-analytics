@@ -15,11 +15,12 @@ import { PageWrapper, ContentWrapper, StyledIcon } from '../components'
 import DoubleTokenLogo from '../components/DoubleLogo'
 import { Bookmark, Activity } from 'react-feather'
 import Link from '../components/Link'
-import { FEE_WARNING_TOKENS } from '../constants'
+import { FEE_WARNING_TOKENS, EXPLORER } from '../constants'
 import { BasicLink } from '../components/Link'
 import { useMedia } from 'react-use'
 import Search from '../components/Search'
 import { useAvaxPrice } from '../contexts/GlobalData'
+import { useChainId } from '../contexts/Application'
 import Markr from '../assets/markr.png'
 
 const AccountWrapper = styled.div`
@@ -89,6 +90,8 @@ const Warning = styled.div`
 `
 
 function AccountPage({ account }) {
+  const { chainId } = useChainId()
+
   // get data for this account
   const transactions = useUserTransactions(account)
   const positions = useUserPositions(account)
@@ -110,19 +113,22 @@ function AccountPage({ account }) {
   useEffect(() => {
     if (positions) {
       for (let i = 0; i < positions.length; i++) {
-        if (FEE_WARNING_TOKENS.includes(positions[i].pair.token0.id) || FEE_WARNING_TOKENS.includes(positions[i].pair.token1.id)) {
+        if (
+          FEE_WARNING_TOKENS[chainId].includes(positions[i].pair.token0.id) ||
+          FEE_WARNING_TOKENS[chainId].includes(positions[i].pair.token1.id)
+        ) {
           setShowWarning(true)
         }
       }
     }
-  }, [positions])
+  }, [positions, chainId])
 
   // settings for list view and dropdowns
   const hideLPContent = positions && positions.length === 0
   const [showDropdown, setShowDropdown] = useState(false)
   const [activePosition, setActivePosition] = useState()
 
-  const dynamicPositions = activePosition ? [activePosition] : positions
+  let dynamicPositions = useMemo(() => (activePosition ? [activePosition] : positions), [activePosition, positions])
 
   const aggregateFees = dynamicPositions?.reduce(function (total, position) {
     return total + position.fees.sum
@@ -133,9 +139,14 @@ function AccountPage({ account }) {
   const positionValue = useMemo(() => {
     return dynamicPositions
       ? dynamicPositions.reduce((total, position) => {
+          // eslint-disable-next-line eqeqeq
+          if (position?.pair?.totalSupply == 0) return total
+
           return (
             total +
-            (parseFloat(position?.liquidityTokenBalance) / parseFloat(position?.pair?.totalSupply)) * position?.pair?.reserveUSD * avaxPrice
+            (parseFloat(position?.liquidityTokenBalance) / parseFloat(position?.pair?.totalSupply)) *
+              position?.pair?.reserveAVAX *
+              avaxPrice
           )
         }, 0)
       : null
@@ -156,7 +167,7 @@ function AccountPage({ account }) {
         <RowBetween>
           <TYPE.body>
             <BasicLink to="/accounts">{'Accounts '}</BasicLink>→{' '}
-            <Link lineHeight={'145.23%'} href={'https://cchain.explorer.avax.network/address/' + account} target="_blank">
+            <Link lineHeight={'145.23%'} href={`${EXPLORER[chainId]}/address/${account}`} target="_blank">
               {' '}
               {account?.slice(0, 42)}{' '}
             </Link>
@@ -175,7 +186,7 @@ function AccountPage({ account }) {
                   </ButtonLight>
                 </Link>
               </RowFixed>
-              <Link lineHeight={'145.23%'} href={'https://cchain.explorer.avax.network/address/' + account} target="_blank">
+              <Link lineHeight={'145.23%'} href={`${EXPLORER[chainId]}/address/${account}`} target="_blank">
                 <TYPE.main fontSize={14}>View on the C-Chain Explorer</TYPE.main>
               </Link>
             </span>

@@ -9,12 +9,14 @@ import { darken } from 'polished'
 import { useMedia, usePrevious } from 'react-use'
 import { timeframeOptions } from '../../constants'
 import { useTokenChartData, useTokenPriceData } from '../../contexts/TokenData'
+import { useChainId } from '../../contexts/Application'
 import DropdownSelect from '../DropdownSelect'
 import CandleStickChart from '../CandleChart'
 import LocalLoader from '../LocalLoader'
 import { AutoColumn } from '../Column'
 import { Activity } from 'react-feather'
 import { useDarkModeManager } from '../../contexts/LocalStorage'
+import { CUSTOM_DECIMALS_TOKENS, DEFAULT_DECIMALS } from '../../constants'
 
 const ChartWrapper = styled.div`
   height: 100%;
@@ -33,16 +35,18 @@ const CHART_VIEW = {
   VOLUME: 'Volume',
   LIQUIDITY: 'Liquidity',
   PRICE: 'Price',
-  LINE_PRICE: 'Price (Line)',
+  LINE_PRICE: 'Price (Line)'
 }
 
 const DATA_FREQUENCY = {
   DAY: 'DAY',
   HOUR: 'HOUR',
-  LINE: 'LINE',
+  LINE: 'LINE'
 }
 
 const TokenChart = ({ address, color, base }) => {
+  const { chainId } = useChainId()
+
   // settings for the window and candle width
   const [chartFilter, setChartFilter] = useState(CHART_VIEW.PRICE)
   const [frequency, setFrequency] = useState(DATA_FREQUENCY.HOUR)
@@ -113,6 +117,9 @@ const TokenChart = ({ address, color, base }) => {
 
   chartData = chartData?.filter((entry) => entry.date >= utcStartTime)
 
+  // Number of decimals to display
+  const decimals = (CUSTOM_DECIMALS_TOKENS[chainId] && CUSTOM_DECIMALS_TOKENS[chainId][address]) ?? DEFAULT_DECIMALS
+
   // update the width on a window resize
   const ref = useRef()
   const isClient = typeof window === 'object'
@@ -182,38 +189,23 @@ const TokenChart = ({ address, color, base }) => {
                 >
                   D
                 </PriceOption>
-                <PriceOption
-                  active={frequency === DATA_FREQUENCY.HOUR}
-                  onClick={() => setFrequency(DATA_FREQUENCY.HOUR)}
-                >
+                <PriceOption active={frequency === DATA_FREQUENCY.HOUR} onClick={() => setFrequency(DATA_FREQUENCY.HOUR)}>
                   H
                 </PriceOption>
-                <PriceOption
-                  active={frequency === DATA_FREQUENCY.LINE}
-                  onClick={() => setFrequency(DATA_FREQUENCY.LINE)}
-                >
+                <PriceOption active={frequency === DATA_FREQUENCY.LINE} onClick={() => setFrequency(DATA_FREQUENCY.LINE)}>
                   <Activity size={14} />
                 </PriceOption>
               </AutoRow>
             )}
           </AutoColumn>
           <AutoRow justify="flex-end" gap="6px" align="flex-start">
-            <OptionButton
-              active={timeWindow === timeframeOptions.WEEK}
-              onClick={() => setTimeWindow(timeframeOptions.WEEK)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.WEEK} onClick={() => setTimeWindow(timeframeOptions.WEEK)}>
               1W
             </OptionButton>
-            <OptionButton
-              active={timeWindow === timeframeOptions.MONTH}
-              onClick={() => setTimeWindow(timeframeOptions.MONTH)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.MONTH} onClick={() => setTimeWindow(timeframeOptions.MONTH)}>
               1M
             </OptionButton>
-            <OptionButton
-              active={timeWindow === timeframeOptions.ALL_TIME}
-              onClick={() => setTimeWindow(timeframeOptions.ALL_TIME)}
-            >
+            <OptionButton active={timeWindow === timeframeOptions.ALL_TIME} onClick={() => setTimeWindow(timeframeOptions.ALL_TIME)}>
               All
             </OptionButton>
           </AutoRow>
@@ -260,7 +252,7 @@ const TokenChart = ({ address, color, base }) => {
                 padding: '10px 14px',
                 borderRadius: 10,
                 borderColor: color,
-                color: 'black',
+                color: 'black'
               }}
               wrapperStyle={{ top: -70, left: -10 }}
             />
@@ -321,7 +313,7 @@ const TokenChart = ({ address, color, base }) => {
                   padding: '10px 14px',
                   borderRadius: 10,
                   borderColor: color,
-                  color: 'black',
+                  color: 'black'
                 }}
                 wrapperStyle={{ top: -70, left: -10 }}
               />
@@ -341,7 +333,12 @@ const TokenChart = ({ address, color, base }) => {
           </ResponsiveContainer>
         ) : priceData ? (
           <ResponsiveContainer aspect={aspect} ref={ref}>
-            <CandleStickChart data={priceData} width={width} base={base} />
+            <CandleStickChart
+              data={priceData}
+              width={width}
+              base={base}
+              valueFormatter={(val) => formattedNum(val, true, false, decimals)}
+            />
           </ResponsiveContainer>
         ) : (
           <LocalLoader />
@@ -383,19 +380,11 @@ const TokenChart = ({ address, color, base }) => {
                 padding: '10px 14px',
                 borderRadius: 10,
                 borderColor: color,
-                color: 'black',
+                color: 'black'
               }}
               wrapperStyle={{ top: -70, left: -10 }}
             />
-            <Bar
-              type="monotone"
-              name={'Volume'}
-              dataKey={'dailyVolumeUSD'}
-              fill={color}
-              opacity={'0.4'}
-              yAxisId={0}
-              stroke={color}
-            />
+            <Bar type="monotone" name={'Volume'} dataKey={'dailyVolumeUSD'} fill={color} opacity={'0.4'} yAxisId={0} stroke={color} />
           </BarChart>
         </ResponsiveContainer>
       )}

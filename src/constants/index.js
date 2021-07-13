@@ -1,9 +1,30 @@
-// Fuji addresses. Update to Avalanche (add chainId)
-export const FACTORY_ADDRESS = '0xdb7d8719a03d02fc7595803f8365e3fa3364fce5' // !! Needs to be lowercase
-export const WAVAX_ADDRESS = '0xd00ae08403b9bbb9124bb305c09058e32c39a48c'
-// export const WAVAX_ADDRESS = '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7'
+// Chain ID
+export const CHAIN_ID = {
+  AVALANCHE: 43114,
+  FUJI: 43113
+}
 
-export const BUNDLE_ID = '1'
+// Default chain ID
+export const DEFAULT_CHAIN_ID = CHAIN_ID.FUJI
+
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
+// !! Needs to be lowercase
+// TODO: Add Avalanche
+export const FACTORY_ADDRESS = {
+  [CHAIN_ID.AVALANCHE]: ZERO_ADDRESS,
+  [CHAIN_ID.FUJI]: '0xdb7d8719a03d02fc7595803f8365e3fa3364fce5'
+}
+
+export const WAVAX_ADDRESS = {
+  [CHAIN_ID.AVALANCHE]: '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7',
+  [CHAIN_ID.FUJI]: '0xd00ae08403b9bbb9124bb305c09058e32c39a48c'
+}
+
+export const BUNDLE_ID = {
+  [CHAIN_ID.AVALANCHE]: '1',
+  [CHAIN_ID.FUJI]: '1'
+}
 
 export const timeframeOptions = {
   WEEK: '1 week',
@@ -14,15 +35,59 @@ export const timeframeOptions = {
 }
 
 // Token list URLs to fetch tokens from - use for warnings on tokens and pairs
-export const SUPPORTED_LIST_URLS__NO_ENS = [
-  'https://raw.githubusercontent.com/Polarfox-DEX/polarfox-token-lists/master/43113/fuji-token-list.json'
-]
+// TODO: Add Avalanche
+export const SUPPORTED_LIST_URLS__NO_ENS = {
+  [CHAIN_ID.AVALANCHE]: [],
+  [CHAIN_ID.FUJI]: ['https://raw.githubusercontent.com/Polarfox-DEX/polarfox-token-lists/master/43113/fuji-token-list.json']
+}
 
 // Hide from overview list
-export const OVERVIEW_TOKEN_BLACKLIST = ['0xa47a05ed74f80fa31621612887d26df40bcf0ca9', '0x97b99b4009041e948337ebca7e6ae52f9f6e633c']
+export const OVERVIEW_TOKEN_BLACKLIST = {
+  [CHAIN_ID.AVALANCHE]: [],
+  [CHAIN_ID.FUJI]: []
+}
 
 // Pair blacklist
-export const PAIR_BLACKLIST = []
+export const PAIR_BLACKLIST = {
+  [CHAIN_ID.AVALANCHE]: [],
+  [CHAIN_ID.FUJI]: []
+}
 
 // For tokens that cause errors on fee calculations
-export const FEE_WARNING_TOKENS = ['0xd46ba6d942050d489dbd938a2c909a5d5039a161']
+export const FEE_WARNING_TOKENS = {
+  [CHAIN_ID.AVALANCHE]: [],
+  [CHAIN_ID.FUJI]: []
+}
+
+// Default number of decimals to display on prices
+export const DEFAULT_DECIMALS = 4
+
+// Tokens whose price should be displayed with a custom number of decimals
+// Lower case
+export const CUSTOM_DECIMALS_TOKENS = {
+  [CHAIN_ID.AVALANCHE]: [], // TODO: Add Akita Inu on Avalanche
+  [CHAIN_ID.FUJI]: {
+    '0xff2ebd79c0948c8fe69b96434915abc03ebb5c37': 10 // Akita Inu
+  }
+}
+
+export const SUBGRAPH_CLIENT = {
+  [CHAIN_ID.AVALANCHE]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-subgraph', // TODO: Add Avalanche
+  [CHAIN_ID.FUJI]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-subgraph'
+}
+
+export const HEALTH_CLIENT = 'https://api.thegraph.com/index-node/graphql'
+
+export const STAKING_CLIENT = 'https://api.thegraph.com/subgraphs/name/way2rach/talisman'
+
+export const BLOCK_CLIENT = {
+  [CHAIN_ID.AVALANCHE]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-blocks', // TODO: Add Avalanche
+  [CHAIN_ID.FUJI]: 'https://api.thegraph.com/subgraphs/name/klemah/polarfox-fuji-blocks'
+}
+
+export const EXPLORER = {
+  [CHAIN_ID.AVALANCHE]: 'https://cchain.explorer.avax.network',
+  [CHAIN_ID.FUJI]: 'https://cchain.explorer.avax-test.network'
+}
+
+export const DEX = 'https://dex-test.polarfox.io' // TODO: Update to production

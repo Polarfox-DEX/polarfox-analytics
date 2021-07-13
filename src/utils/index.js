@@ -8,7 +8,7 @@ import { GET_BLOCK, GET_BLOCKS, GET_BLOCK_BEFORE, GET_BLOCK_AFTER, SHARE_VALUE }
 import { Text } from 'rebass'
 import _Decimal from 'decimal.js-light'
 import toFormat from 'toformat'
-import { timeframeOptions, WAVAX_ADDRESS } from '../constants'
+import { timeframeOptions, WAVAX_ADDRESS, EXPLORER, DEX } from '../constants'
 import Numeral from 'numeral'
 
 // format libraries
@@ -37,26 +37,26 @@ export function getTimeframe(timeWindow) {
   return utcStartTime
 }
 
-export function getPoolLink(token0Address, token1Address = null, remove = false) {
+export function getPoolLink(chainId, token0Address, token1Address = null, remove = false) {
   if (!token1Address) {
-    return (
-      `https://dex.polarfox.io/#/` + (remove ? `remove` : `add`) + `/${token0Address === WAVAX_ADDRESS ? 'AVAX' : token0Address}/${'AVAX'}`
-    )
+    return `${DEX}/#/` + (remove ? `remove` : `add`) + `/${token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address}/${'AVAX'}`
   } else {
     return (
-      `https://dex.polarfox.io/#/` +
+      `${DEX}/#/` +
       (remove ? `remove` : `add`) +
-      `/${token0Address === WAVAX_ADDRESS ? 'AVAX' : token0Address}/${token1Address === WAVAX_ADDRESS ? 'AVAX' : token1Address}`
+      `/${token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address}/${
+        token1Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token1Address
+      }`
     )
   }
 }
 
-export function getSwapLink(token0Address, token1Address = null) {
+export function getSwapLink(chainId, token0Address, token1Address = null) {
   if (!token1Address) {
-    return `https://dex.polarfox.io/#/swap?inputCurrency=${token0Address}`
+    return `${DEX}/#/swap?inputCurrency=${token0Address}`
   } else {
-    return `https://dex.polarfox.io/#/swap?inputCurrency=${token0Address === WAVAX_ADDRESS ? 'AVAX' : token0Address}&outputCurrency=${
-      token1Address === WAVAX_ADDRESS ? 'AVAX' : token1Address
+    return `${DEX}/#/swap?inputCurrency=${token0Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token0Address}&outputCurrency=${
+      token1Address === WAVAX_ADDRESS[chainId] ? 'AVAX' : token1Address
     }`
   }
 }
@@ -122,8 +122,8 @@ export async function splitQuery(query, localClient, vars, list, skipCount = 100
  * @dev Query speed is optimized by limiting to a 600-second period
  * @param {Int} timestamp in seconds
  */
-export async function getBlockFromTimestamp(timestamp) {
-  let result = await blockClient.query({
+export async function getBlockFromTimestamp(timestamp, chainId) {
+  let result = await blockClient(chainId).query({
     query: GET_BLOCK,
     variables: {
       timestampFrom: timestamp,
@@ -141,12 +141,12 @@ export async function getBlockFromTimestamp(timestamp) {
  * @dev timestamps are returns as they were provided; not the block time.
  * @param {Array} timestamps
  */
-export async function getBlocksFromTimestamps(timestamps, skipCount = 500) {
+export async function getBlocksFromTimestamps(timestamps, chainId, skipCount = 500) {
   if (timestamps?.length === 0) {
     return []
   }
 
-  let fetchedData = await splitQuery(GET_BLOCKS, blockClient, [], timestamps, skipCount)
+  let fetchedData = await splitQuery(GET_BLOCKS, blockClient(chainId), [], timestamps, skipCount)
 
   let blocks = []
   if (fetchedData) {
@@ -169,8 +169,8 @@ export async function getBlocksFromTimestamps(timestamps, skipCount = 500) {
  * @dev timestamps are returns as they were provided; not the block time.
  * @param {Array} timestamps
  */
-export async function getMostRecentBlockSinceTimestamp(timestamp, skipCount = 500) {
-  let result = await blockClient.query({
+export async function getMostRecentBlockSinceTimestamp(timestamp, chainId, skipCount = 500) {
+  let result = await blockClient(chainId).query({
     query: GET_BLOCK_AFTER,
     variables: {
       timestampFrom: timestamp
@@ -181,7 +181,7 @@ export async function getMostRecentBlockSinceTimestamp(timestamp, skipCount = 50
   let block = result?.data?.blocks?.[0]?.number
 
   if (block === undefined) {
-    result = await blockClient.query({
+    result = await blockClient(chainId).query({
       query: GET_BLOCK_BEFORE,
       variables: {
         timestampTo: timestamp
@@ -194,27 +194,27 @@ export async function getMostRecentBlockSinceTimestamp(timestamp, skipCount = 50
   return block
 }
 
-export async function getLiquidityTokenBalanceOvertime(account, timestamps) {
-  // get blocks based on timestamps
-  const blocks = await getBlocksFromTimestamps(timestamps)
+// export async function getLiquidityTokenBalanceOvertime(account, timestamps, chainId) {
+//   // get blocks based on timestamps
+//   const blocks = await getBlocksFromTimestamps(timestamps, chainId)
 
-  // get historical share values with time travel queries
-  let result = await client.query({
-    query: SHARE_VALUE(account, blocks),
-    fetchPolicy: 'cache-first'
-  })
+//   // get historical share values with time travel queries
+//   let result = await client(chainId).query({
+//     query: SHARE_VALUE(account, blocks),
+//     fetchPolicy: 'cache-first'
+//   })
 
-  let values = []
-  for (var row in result?.data) {
-    let timestamp = row.split('t')[1]
-    if (timestamp) {
-      values.push({
-        timestamp,
-        balance: 0
-      })
-    }
-  }
-}
+//   let values = []
+//   for (var row in result?.data) {
+//     let timestamp = row.split('t')[1]
+//     if (timestamp) {
+//       values.push({
+//         timestamp,
+//         balance: 0
+//       })
+//     }
+//   }
+// }
 
 /**
  * @notice Example query using time travel queries
@@ -222,7 +222,7 @@ export async function getLiquidityTokenBalanceOvertime(account, timestamps) {
  * @param {String} pairAddress
  * @param {Array} timestamps
  */
-export async function getShareValueOverTime(pairAddress, timestamps) {
+export async function getShareValueOverTime(pairAddress, timestamps, chainId) {
   if (!timestamps) {
     const utcCurrentTime = dayjs()
     const utcSevenDaysBack = utcCurrentTime.subtract(8, 'day').unix()
@@ -230,10 +230,10 @@ export async function getShareValueOverTime(pairAddress, timestamps) {
   }
 
   // get blocks based on timestamps
-  const blocks = await getBlocksFromTimestamps(timestamps)
+  const blocks = await getBlocksFromTimestamps(timestamps, chainId)
 
   // get historical share values with time travel queries
-  let result = await client.query({
+  let result = await client(chainId).query({
     query: SHARE_VALUE(pairAddress, blocks),
     fetchPolicy: 'cache-first'
   })
@@ -308,11 +308,13 @@ export const setThemeColor = (theme) => document.documentElement.style.setProper
 
 export const Big = (number) => new BigNumber(number)
 
-export const urls = {
-  showTransaction: (tx) => `https://cchain.explorer.avax.network/tx/${tx}/`,
-  showAddress: (address) => `https://cchain.explorer.avax.network/address/${address}/`,
-  showToken: (address) => `https://cchain.explorer.avax.network/token/${address}/`,
-  showBlock: (block) => `https://cchain.explorer.avax.network/blocks/${block}/`
+export const urls = (chainId) => {
+  return {
+    showTransaction: (tx) => `${EXPLORER[chainId]}/tx/${tx}/`,
+    showAddress: (address) => `${EXPLORER[chainId]}/address/${address}/`,
+    showToken: (address) => `${EXPLORER[chainId]}/token/${address}/`,
+    showBlock: (block) => `${EXPLORER[chainId]}/blocks/${block}/`
+  }
 }
 
 export const formatTime = (unix) => {
@@ -352,7 +354,7 @@ export const toSignificant = (number, significantDigits) => {
   return updated.toFormat(updated.decimalPlaces(), { groupSeparator: '' })
 }
 
-export const formattedNum = (number, usd = false, acceptNegatives = false) => {
+export const formattedNum = (number, usd = false, acceptNegatives = false, decimals = 4) => {
   if (isNaN(number) || number === '' || number === undefined) {
     return usd ? '$0' : 0
   }
@@ -369,8 +371,12 @@ export const formattedNum = (number, usd = false, acceptNegatives = false) => {
     return 0
   }
 
-  if (num < 0.0001 && num > 0) {
-    return usd ? '< $0.0001' : '< 0.0001'
+  // See if number is under the minimum allowed by the given amount of decimals
+  const minimum = decimals > 0 ? '0.' + new Array(decimals).join('0') + '1' : '1'
+
+  if (num < parseFloat(minimum) && num > 0) {
+    return usd ? `$${num.toExponential(2)}` : `${num.toExponential(2)}`
+    // return usd ? `< $${minimum}` : `< ${minimum}`
   }
 
   if (num > 1000) {
@@ -379,14 +385,14 @@ export const formattedNum = (number, usd = false, acceptNegatives = false) => {
 
   if (usd) {
     if (num < 0.1) {
-      return '$' + Number(parseFloat(num).toFixed(4))
+      return '$' + Number(parseFloat(num).toFixed(decimals))
     } else {
       let usdString = priceFormatter.format(num)
       return '$' + usdString.slice(1, usdString.length)
     }
   }
 
-  return Number(parseFloat(num).toFixed(5))
+  return Number(parseFloat(num).toFixed(decimals + 1))
 }
 
 export function rawPercent(percentRaw) {
@@ -438,7 +444,7 @@ export function formattedPercent(percent, useBrackets = false) {
 }
 
 /**
- * gets the amoutn difference plus the % change in change itself (second order change)
+ * gets the amount difference plus the % change in change itself (second order change)
  * @param {*} valueNow
  * @param {*} value24HoursAgo
  * @param {*} value48HoursAgo

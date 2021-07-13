@@ -27,10 +27,11 @@ import { Hover } from '../components'
 import { useAvaxPrice } from '../contexts/GlobalData'
 import Warning from '../components/Warning'
 import { usePathDismissed, useSavedPairs } from '../contexts/LocalStorage'
+import { CUSTOM_DECIMALS_TOKENS, DEFAULT_DECIMALS, EXPLORER } from '../constants'
 
 import { Bookmark, PlusCircle } from 'react-feather'
 import FormattedName from '../components/FormattedName'
-import { useListedTokens } from '../contexts/Application'
+import { useListedTokens, useChainId } from '../contexts/Application'
 
 const DashboardWrapper = styled.div`
   width: 100%;
@@ -108,6 +109,8 @@ const WarningGrouping = styled.div`
 `
 
 function PairPage({ pairAddress, history }) {
+  const { chainId } = useChainId()
+
   const {
     token0,
     token1,
@@ -127,7 +130,7 @@ function PairPage({ pairAddress, history }) {
   }, [])
 
   const transactions = usePairTransactions(pairAddress)
-  const backgroundColor = useColor(pairAddress)
+  const backgroundColor = useColor(token0?.id)
 
   // liquidity
   const liquidity = trackedReserveUSD ? formattedNum(trackedReserveUSD, true) : reserveUSD ? formattedNum(reserveUSD, true) : '-'
@@ -163,15 +166,25 @@ function PairPage({ pairAddress, history }) {
         : formattedNum(oneDayVolumeUSD * 0.003, true)
       : '-'
 
+  // Number of decimals to display
+  const decimalsToken0 = (CUSTOM_DECIMALS_TOKENS[chainId] && CUSTOM_DECIMALS_TOKENS[chainId][token0.id]) ?? DEFAULT_DECIMALS
+  const decimalsToken1 = (CUSTOM_DECIMALS_TOKENS[chainId] && CUSTOM_DECIMALS_TOKENS[chainId][token1.id]) ?? DEFAULT_DECIMALS
+
   // token data for usd
   const [avaxPrice] = useAvaxPrice()
-  const token0USD = token0?.derivedAVAX && avaxPrice ? formattedNum(parseFloat(token0.derivedAVAX) * parseFloat(avaxPrice), true) : ''
+  const token0USD =
+    token0?.derivedAVAX && avaxPrice
+      ? formattedNum(parseFloat(token0.derivedAVAX) * parseFloat(avaxPrice), true, false, decimalsToken0)
+      : ''
 
-  const token1USD = token1?.derivedAVAX && avaxPrice ? formattedNum(parseFloat(token1.derivedAVAX) * parseFloat(avaxPrice), true) : ''
+  const token1USD =
+    token1?.derivedAVAX && avaxPrice
+      ? formattedNum(parseFloat(token1.derivedAVAX) * parseFloat(avaxPrice), true, false, decimalsToken1)
+      : ''
 
   // rates
-  const token0Rate = reserve0 && reserve1 ? formattedNum(reserve1 / reserve0) : '-'
-  const token1Rate = reserve0 && reserve1 ? formattedNum(reserve0 / reserve1) : '-'
+  const token0Rate = reserve0 && reserve1 ? formattedNum(reserve1 / reserve0, false, false, decimalsToken0) : '-'
+  const token1Rate = reserve0 && reserve1 ? formattedNum(reserve0 / reserve1, false, false, decimalsToken1) : '-'
 
   // formatted symbols for overflow
   const formattedSymbol0 = token0?.symbol.length > 6 ? token0?.symbol.slice(0, 5) + '...' : token0?.symbol
@@ -210,12 +223,7 @@ function PairPage({ pairAddress, history }) {
             <TYPE.body>
               <BasicLink to="/pairs">{'Pairs '}</BasicLink>→ {token0?.symbol}-{token1?.symbol}{' '}
             </TYPE.body>
-            <Link
-              style={{ width: 'fit-content' }}
-              color={backgroundColor}
-              external
-              href={'https://cchain.explorer.avax.network/address/' + pairAddress}
-            >
+            <Link style={{ width: 'fit-content' }} color={backgroundColor} external href={`${EXPLORER[chainId]}/address/${pairAddress}`}>
               <Text style={{ marginLeft: '.15rem' }} fontSize={'14px'} fontWeight={400}>
                 ({pairAddress.slice(0, 8) + '...' + pairAddress.slice(36, 42)})
               </Text>
@@ -272,10 +280,10 @@ function PairPage({ pairAddress, history }) {
                     <></>
                   )}
 
-                  <Link external href={getPoolLink(token0?.id, token1?.id)}>
+                  <Link external href={getPoolLink(chainId, token0?.id, token1?.id)}>
                     <ButtonLight color={backgroundColor}>+ Add Liquidity</ButtonLight>
                   </Link>
-                  <Link external href={getSwapLink(token0?.id, token1?.id)}>
+                  <Link external href={getSwapLink(chainId, token0?.id, token1?.id)}>
                     <ButtonDark ml={!below1080 && '.5rem'} mr={below1080 && '.5rem'} color={backgroundColor}>
                       Trade
                     </ButtonDark>
@@ -399,7 +407,14 @@ function PairPage({ pairAddress, history }) {
                     gridRow: below1080 ? '' : '1/5'
                   }}
                 >
-                  <PairChart address={pairAddress} color={backgroundColor} base0={reserve1 / reserve0} base1={reserve0 / reserve1} />
+                  <PairChart
+                    address={pairAddress}
+                    color={backgroundColor}
+                    base0={reserve1 / reserve0}
+                    base1={reserve0 / reserve1}
+                    decimalsToken0={decimalsToken0}
+                    decimalsToken1={decimalsToken1}
+                  />
                 </Panel>
               </PanelWrapper>
               <TYPE.main fontSize={'1.125rem'} style={{ marginTop: '3rem' }}>
@@ -467,7 +482,7 @@ function PairPage({ pairAddress, history }) {
                     </AutoRow>
                   </Column>
                   <ButtonLight color={backgroundColor}>
-                    <Link color={backgroundColor} external href={'https://cchain.explorer.avax.network/address/' + pairAddress}>
+                    <Link color={backgroundColor} external href={`${EXPLORER[chainId]}/address/${pairAddress}`}>
                       View on the C-Chain Explorer ↗
                     </Link>
                   </ButtonLight>

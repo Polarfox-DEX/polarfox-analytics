@@ -1,15 +1,7 @@
 import React, { createContext, useContext, useReducer, useMemo, useCallback, useEffect } from 'react'
 
 import { client } from '../apollo/client'
-import {
-  TOKEN_DATA,
-  FILTERED_TRANSACTIONS,
-  TOKEN_CHART,
-  TOKENS_CURRENT,
-  TOKENS_DYNAMIC,
-  PRICES_BY_BLOCK,
-  PAIR_DATA
-} from '../apollo/queries'
+import { TOKEN_DATA, FILTERED_TRANSACTIONS, TOKEN_CHART, TOKENS_CURRENT, TOKENS_DYNAMIC, PRICES_BY_BLOCK } from '../apollo/queries'
 
 import { useAvaxPrice, getAvaxPriceAtDate, getCurrentAvaxPrice, getAvaxPriceAtTimestamp } from './GlobalData'
 
@@ -27,7 +19,7 @@ import {
   getMostRecentBlockSinceTimestamp
 } from '../utils'
 import { timeframeOptions } from '../constants'
-import { useLatestBlocks } from './Application'
+import { useLatestBlocks, useChainId } from './Application'
 import { updateNameData } from '../utils/data'
 
 const UPDATE = 'UPDATE'
@@ -194,31 +186,31 @@ export default function Provider({ children }) {
   )
 }
 
-const getTopTokens = async (avaxPrice, avaxPriceOld) => {
+const getTopTokens = async (avaxPrice, avaxPriceOld, chainId) => {
   const utcCurrentTime = dayjs()
   const utcOneDayBack = utcCurrentTime.subtract(1, 'day').unix()
   const utcTwoDaysBack = utcCurrentTime.subtract(2, 'day').unix()
-  let oneDayBlock = await getBlockFromTimestamp(utcOneDayBack)
+  let oneDayBlock = await getBlockFromTimestamp(utcOneDayBack, chainId)
   if (oneDayBlock === undefined) {
-    oneDayBlock = await getMostRecentBlockSinceTimestamp(utcOneDayBack)
+    oneDayBlock = await getMostRecentBlockSinceTimestamp(utcOneDayBack, chainId)
   }
-  let twoDayBlock = await getBlockFromTimestamp(utcTwoDaysBack)
+  let twoDayBlock = await getBlockFromTimestamp(utcTwoDaysBack, chainId)
   if (twoDayBlock === undefined) {
-    twoDayBlock = await getMostRecentBlockSinceTimestamp(utcTwoDaysBack)
+    twoDayBlock = await getMostRecentBlockSinceTimestamp(utcTwoDaysBack, chainId)
   }
 
   try {
-    let current = await client.query({
+    let current = await client(chainId).query({
       query: TOKENS_CURRENT,
       fetchPolicy: 'cache-first'
     })
 
-    let oneDayResult = await client.query({
+    let oneDayResult = await client(chainId).query({
       query: TOKENS_DYNAMIC(oneDayBlock),
       fetchPolicy: 'cache-first'
     })
 
-    let twoDayResult = await client.query({
+    let twoDayResult = await client(chainId).query({
       query: TOKENS_DYNAMIC(twoDayBlock),
       fetchPolicy: 'cache-first'
     })
@@ -244,14 +236,14 @@ const getTopTokens = async (avaxPrice, avaxPriceOld) => {
 
           // catch the case where token wasnt in top list in previous days
           if (!oneDayHistory) {
-            let oneDayResult = await client.query({
+            let oneDayResult = await client(chainId).query({
               query: TOKEN_DATA(token.id, oneDayBlock),
               fetchPolicy: 'cache-first'
             })
             oneDayHistory = oneDayResult.data.tokens[0]
           }
           if (!twoDayHistory) {
-            let twoDayResult = await client.query({
+            let twoDayResult = await client(chainId).query({
               query: TOKEN_DATA(token.id, twoDayBlock),
               fetchPolicy: 'cache-first'
             })
@@ -260,9 +252,9 @@ const getTopTokens = async (avaxPrice, avaxPriceOld) => {
 
           // calculate percentage changes and daily changes
           const [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
-            data.tradeVolumeUSD * avaxPrice,
-            oneDayHistory?.tradeVolumeUSD * avaxPrice ?? 0,
-            twoDayHistory?.tradeVolumeUSD * avaxPrice ?? 0
+            data.tradeVolumeAVAX * avaxPrice,
+            oneDayHistory?.tradeVolumeAVAX * avaxPrice ?? 0,
+            twoDayHistory?.tradeVolumeAVAX * avaxPrice ?? 0
           )
           const [oneDayTxns, txnChange] = get2DayPercentChange(data.txCount, oneDayHistory?.txCount ?? 0, twoDayHistory?.txCount ?? 0)
 
@@ -297,18 +289,6 @@ const getTopTokens = async (avaxPrice, avaxPriceOld) => {
             token0: data
           })
 
-          // HOTFIX for Aave
-          if (data.id === '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9') {
-            const aaveData = await client.query({
-              query: PAIR_DATA('0xdfc14d2af169b0d36c4eff567ada9b2e0cae044f'),
-              fetchPolicy: 'cache-first'
-            })
-            const result = aaveData.data.pairs[0]
-            data.totalLiquidityUSD = parseFloat(result.reserveUSD) / 2
-            data.liquidityChangeUSD = 0
-            data.priceChangeUSD = 0
-          }
-
           return data
         })
     )
@@ -321,12 +301,12 @@ const getTopTokens = async (avaxPrice, avaxPriceOld) => {
   }
 }
 
-const getTokenData = async (address, avaxPrice, avaxPriceOld) => {
+const getTokenData = async (address, avaxPrice, avaxPriceOld, chainId) => {
   const utcCurrentTime = dayjs()
   const utcOneDayBack = utcCurrentTime.subtract(1, 'day').startOf('minute').unix()
   const utcTwoDaysBack = utcCurrentTime.subtract(2, 'day').startOf('minute').unix()
-  let oneDayBlock = await getBlockFromTimestamp(utcOneDayBack)
-  let twoDayBlock = await getBlockFromTimestamp(utcTwoDaysBack)
+  let oneDayBlock = await getBlockFromTimestamp(utcOneDayBack, chainId)
+  let twoDayBlock = await getBlockFromTimestamp(utcTwoDaysBack, chainId)
 
   // initialize data arrays
   let data = {}
@@ -335,21 +315,21 @@ const getTokenData = async (address, avaxPrice, avaxPriceOld) => {
 
   try {
     // fetch all current and historical data
-    let result = await client.query({
+    let result = await client(chainId).query({
       query: TOKEN_DATA(address),
       fetchPolicy: 'cache-first'
     })
     data = result?.data?.tokens?.[0]
 
     // get results from 24 hours in past
-    let oneDayResult = await client.query({
+    let oneDayResult = await client(chainId).query({
       query: TOKEN_DATA(address, oneDayBlock),
       fetchPolicy: 'cache-first'
     })
     oneDayData = oneDayResult.data.tokens[0]
 
     // get results from 48 hours in past
-    let twoDayResult = await client.query({
+    let twoDayResult = await client(chainId).query({
       query: TOKEN_DATA(address, twoDayBlock),
       fetchPolicy: 'cache-first'
     })
@@ -357,14 +337,14 @@ const getTokenData = async (address, avaxPrice, avaxPriceOld) => {
 
     // catch the case where token wasnt in top list in previous days
     if (!oneDayData) {
-      let oneDayResult = await client.query({
+      let oneDayResult = await client(chainId).query({
         query: TOKEN_DATA(address, oneDayBlock),
         fetchPolicy: 'cache-first'
       })
       oneDayData = oneDayResult.data.tokens[0]
     }
     if (!twoDayData) {
-      let twoDayResult = await client.query({
+      let twoDayResult = await client(chainId).query({
         query: TOKEN_DATA(address, twoDayBlock),
         fetchPolicy: 'cache-first'
       })
@@ -373,10 +353,15 @@ const getTokenData = async (address, avaxPrice, avaxPriceOld) => {
 
     // calculate percentage changes and daily changes
     const [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
-      data.tradeVolumeUSD * avaxPrice,
-      oneDayData?.tradeVolumeUSD * avaxPrice ?? 0,
-      twoDayData?.tradeVolumeUSD * avaxPrice ?? 0
+      data.tradeVolumeAVAX * avaxPrice,
+      oneDayData?.tradeVolumeAVAX * avaxPrice ?? 0,
+      twoDayData?.tradeVolumeAVAX * avaxPrice ?? 0
     )
+
+    // Calculate untracked volume
+    data.untrackedVolumeUSD = data.untrackedVolumeAVAX * avaxPrice
+    oneDayData.untrackedVolumeUSD = oneDayData.untrackedVolumeAVAX * avaxPrice
+    twoDayData.untrackedVolumeUSD = twoDayData.untrackedVolumeAVAX * avaxPrice
 
     // calculate percentage changes and daily changes
     const [oneDayVolumeUT, volumeChangeUT] = get2DayPercentChange(
@@ -417,28 +402,16 @@ const getTokenData = async (address, avaxPrice, avaxPriceOld) => {
     updateNameData({
       token0: data
     })
-
-    // HOTFIX for Aave
-    if (data.id === '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9') {
-      const aaveData = await client.query({
-        query: PAIR_DATA('0xdfc14d2af169b0d36c4eff567ada9b2e0cae044f'),
-        fetchPolicy: 'cache-first'
-      })
-      const result = aaveData.data.pairs[0]
-      data.totalLiquidityUSD = parseFloat(result.reserveUSD) / 2
-      data.liquidityChangeUSD = 0
-      data.priceChangeUSD = 0
-    }
   } catch (e) {
     console.log(e)
   }
   return data
 }
 
-const getTokenTransactions = async (allPairsFormatted) => {
+const getTokenTransactions = async (allPairsFormatted, chainId) => {
   const transactions = {}
   try {
-    let result = await client.query({
+    let result = await client(chainId).query({
       query: FILTERED_TRANSACTIONS,
       variables: {
         allPairs: allPairsFormatted
@@ -454,10 +427,10 @@ const getTokenTransactions = async (allPairsFormatted) => {
   return transactions
 }
 
-const getTokenPairs = async (tokenAddress) => {
+const getTokenPairs = async (tokenAddress, chainId) => {
   try {
     // fetch all current and historical data
-    let result = await client.query({
+    let result = await client(chainId).query({
       query: TOKEN_DATA(tokenAddress),
       fetchPolicy: 'cache-first'
     })
@@ -467,7 +440,7 @@ const getTokenPairs = async (tokenAddress) => {
   }
 }
 
-const getIntervalTokenData = async (tokenAddress, startTime, interval = 3600, latestBlock) => {
+const getIntervalTokenData = async (tokenAddress, startTime, interval = 3600, latestBlock, chainId) => {
   const utcEndTime = dayjs.utc()
   let time = startTime
 
@@ -487,7 +460,7 @@ const getIntervalTokenData = async (tokenAddress, startTime, interval = 3600, la
   // once you have all the timestamps, get the blocks for each timestamp in a bulk query
   let blocks
   try {
-    blocks = await getBlocksFromTimestamps(timestamps, 100)
+    blocks = await getBlocksFromTimestamps(timestamps, chainId, 100)
 
     // catch failing case
     if (!blocks || blocks.length === 0) {
@@ -500,7 +473,7 @@ const getIntervalTokenData = async (tokenAddress, startTime, interval = 3600, la
       })
     }
 
-    let result = await splitQuery(PRICES_BY_BLOCK, client, [tokenAddress], blocks, 50)
+    let result = await splitQuery(PRICES_BY_BLOCK, client(chainId), [tokenAddress], blocks, 50)
 
     // format token AVAX price results
     let values = []
@@ -561,7 +534,7 @@ const getIntervalTokenData = async (tokenAddress, startTime, interval = 3600, la
   }
 }
 
-const getTokenChartData = async (tokenAddress) => {
+const getTokenChartData = async (tokenAddress, avaxPrice, chainId) => {
   let data = []
   const utcEndTime = dayjs.utc()
   let utcStartTime = utcEndTime.subtract(1, 'year')
@@ -571,7 +544,7 @@ const getTokenChartData = async (tokenAddress) => {
     let allFound = false
     let skip = 0
     while (!allFound) {
-      let result = await client.query({
+      let result = await client(chainId).query({
         query: TOKEN_CHART,
         variables: {
           tokenAddr: tokenAddress,
@@ -593,13 +566,14 @@ const getTokenChartData = async (tokenAddress) => {
       // add the day index to the set of days
       dayIndexSet.add((data[i].date / oneDay).toFixed(0))
       dayIndexArray.push(data[i])
-      dayData.dailyVolumeUSD = parseFloat(dayData.dailyVolumeUSD)
+      dayData.dailyVolumeAVAX = parseFloat(dayData.dailyVolumeAVAX)
     })
 
     // fill in empty days
     let timestamp = data[0] && data[0].date ? data[0].date : startTime
-    let latestLiquidityUSD = data[0] && data[0].totalLiquidityUSD
-    let latestPriceUSD = data[0] && data[0].priceUSD
+    let latestLiquidityAVAX = data[0] && data[0].totalLiquidityAVAX
+    let latestPriceAVAX = data[0] && data[0].priceAVAX
+    let latestPriceUSD = latestPriceAVAX * avaxPrice
     let index = 1
     while (timestamp < utcEndTime.startOf('minute').unix() - oneDay) {
       const nextDay = timestamp + oneDay
@@ -608,12 +582,14 @@ const getTokenChartData = async (tokenAddress) => {
         data.push({
           date: nextDay,
           dayString: nextDay,
-          dailyVolumeUSD: 0,
+          dailyVolumeAVAX: 0,
+          priceAVAX: latestPriceAVAX,
           priceUSD: latestPriceUSD,
-          totalLiquidityUSD: latestLiquidityUSD
+          totalLiquidityAVAX: latestLiquidityAVAX
         })
       } else {
-        latestLiquidityUSD = dayIndexArray[index].totalLiquidityUSD
+        latestLiquidityAVAX = dayIndexArray[index].totalLiquidityAVAX
+        latestPriceAVAX = dayIndexArray[index].priceAVAX
         latestPriceUSD = dayIndexArray[index].priceUSD
         index = index + 1
       }
@@ -628,9 +604,9 @@ const getTokenChartData = async (tokenAddress) => {
       } else {
         latestAvaxPrice = await getAvaxPriceAtDate(data[j].date)
       }
-      data[j].priceUSD = data[j].priceUSD * latestAvaxPrice
-      data[j].totalLiquidityUSD = data[j].totalLiquidityUSD * latestAvaxPrice
-      data[j].dailyVolumeUSD = data[j].dailyVolumeUSD * latestAvaxPrice
+      data[j].priceUSD = data[j].priceAVAX * latestAvaxPrice
+      data[j].totalLiquidityUSD = data[j].totalLiquidityAVAX * latestAvaxPrice
+      data[j].dailyVolumeUSD = data[j].dailyVolumeAVAX * latestAvaxPrice
     }
   } catch (e) {
     console.log(e)
@@ -639,36 +615,39 @@ const getTokenChartData = async (tokenAddress) => {
 }
 
 export function Updater() {
+  const { chainId } = useChainId()
   const [, { updateTopTokens }] = useTokenDataContext()
   const [avaxPrice, avaxPriceOld] = useAvaxPrice()
   useEffect(() => {
     async function getData() {
       // get top pairs for overview list
-      let topTokens = await getTopTokens(avaxPrice, avaxPriceOld)
+      let topTokens = await getTopTokens(avaxPrice, avaxPriceOld, chainId)
       topTokens && updateTopTokens(topTokens)
     }
     avaxPrice && avaxPriceOld && getData()
-  }, [avaxPrice, avaxPriceOld, updateTopTokens])
+  }, [avaxPrice, avaxPriceOld, updateTopTokens, chainId])
   return null
 }
 
 export function useTokenData(tokenAddress) {
+  const { chainId } = useChainId()
   const [state, { update }] = useTokenDataContext()
   const [avaxPrice, avaxPriceOld] = useAvaxPrice()
   const tokenData = state?.[tokenAddress]
 
   useEffect(() => {
     if (!tokenData && avaxPrice && avaxPriceOld && isAddress(tokenAddress)) {
-      getTokenData(tokenAddress, avaxPrice, avaxPriceOld).then((data) => {
+      getTokenData(tokenAddress, avaxPrice, avaxPriceOld, chainId).then((data) => {
         update(tokenAddress, data)
       })
     }
-  }, [avaxPrice, avaxPriceOld, tokenAddress, tokenData, update])
+  }, [avaxPrice, avaxPriceOld, tokenAddress, tokenData, update, chainId])
 
   return tokenData || {}
 }
 
 export function useTokenTransactions(tokenAddress) {
+  const { chainId } = useChainId()
   const [state, { updateTokenTxns }] = useTokenDataContext()
   const tokenTxns = state?.[tokenAddress]?.txns
 
@@ -682,25 +661,25 @@ export function useTokenTransactions(tokenAddress) {
   useEffect(() => {
     async function checkForTxns() {
       if (!tokenTxns && allPairsFormatted) {
-        let transactions = await getTokenTransactions(allPairsFormatted)
+        let transactions = await getTokenTransactions(allPairsFormatted, chainId)
         updateTokenTxns(tokenAddress, transactions)
       }
     }
     checkForTxns()
-  }, [tokenTxns, tokenAddress, updateTokenTxns, allPairsFormatted])
+  }, [tokenTxns, tokenAddress, updateTokenTxns, allPairsFormatted, chainId])
 
   let [avaxPrice] = useAvaxPrice()
 
   if (tokenTxns) {
     let txCopy = _.cloneDeep(tokenTxns)
     for (let i = 0; i < txCopy.mints.length; i++) {
-      txCopy.mints[i].amountUSD = (parseFloat(txCopy.mints[i].amountUSD) * avaxPrice).toString()
+      txCopy.mints[i].amountUSD = (parseFloat(txCopy.mints[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < txCopy.burns.length; i++) {
-      txCopy.burns[i].amountUSD = (parseFloat(txCopy.burns[i].amountUSD) * avaxPrice).toString()
+      txCopy.burns[i].amountUSD = (parseFloat(txCopy.burns[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < txCopy.swaps.length; i++) {
-      txCopy.swaps[i].amountUSD = (parseFloat(txCopy.swaps[i].amountUSD) * avaxPrice).toString()
+      txCopy.swaps[i].amountUSD = (parseFloat(txCopy.swaps[i].amountAVAX) * avaxPrice).toString()
     }
     return txCopy
   }
@@ -709,34 +688,37 @@ export function useTokenTransactions(tokenAddress) {
 }
 
 export function useTokenPairs(tokenAddress) {
+  const { chainId } = useChainId()
   const [state, { updateAllPairs }] = useTokenDataContext()
   const tokenPairs = state?.[tokenAddress]?.[TOKEN_PAIRS_KEY]
 
   useEffect(() => {
     async function fetchData() {
-      let allPairs = await getTokenPairs(tokenAddress)
+      let allPairs = await getTokenPairs(tokenAddress, chainId)
       updateAllPairs(tokenAddress, allPairs)
     }
     if (!tokenPairs && isAddress(tokenAddress)) {
       fetchData()
     }
-  }, [tokenAddress, tokenPairs, updateAllPairs])
+  }, [tokenAddress, tokenPairs, updateAllPairs, chainId])
 
   return tokenPairs || []
 }
 
 export function useTokenChartData(tokenAddress) {
+  const { chainId } = useChainId()
+  const [avaxPrice] = useAvaxPrice()
   const [state, { updateChartData }] = useTokenDataContext()
   const chartData = state?.[tokenAddress]?.chartData
   useEffect(() => {
     async function checkForChartData() {
       if (!chartData) {
-        let data = await getTokenChartData(tokenAddress)
+        let data = await getTokenChartData(tokenAddress, avaxPrice, chainId)
         updateChartData(tokenAddress, data)
       }
     }
     checkForChartData()
-  }, [chartData, tokenAddress, updateChartData])
+  }, [chartData, tokenAddress, updateChartData, chainId, avaxPrice])
   return chartData
 }
 
@@ -748,6 +730,7 @@ export function useTokenChartData(tokenAddress) {
  * @param {*} interval  // the chunk size in seconds - default is 1 hour of 3600s
  */
 export function useTokenPriceData(tokenAddress, timeWindow, interval = 3600) {
+  const { chainId } = useChainId()
   const [state, { updatePriceData }] = useTokenDataContext()
   const chartData = state?.[tokenAddress]?.[timeWindow]?.[interval]
   const [latestBlock] = useLatestBlocks()
@@ -758,13 +741,13 @@ export function useTokenPriceData(tokenAddress, timeWindow, interval = 3600) {
     const startTime = timeWindow === timeframeOptions.ALL_TIME ? 1605139200 : currentTime.subtract(1, windowSize).startOf('hour').unix()
 
     async function fetch() {
-      let data = await getIntervalTokenData(tokenAddress, startTime, interval, latestBlock)
+      let data = await getIntervalTokenData(tokenAddress, startTime, interval, latestBlock, chainId)
       updatePriceData(tokenAddress, data, timeWindow, interval)
     }
     if (!chartData) {
       fetch()
     }
-  }, [chartData, interval, timeWindow, tokenAddress, updatePriceData, latestBlock])
+  }, [chartData, interval, timeWindow, tokenAddress, updatePriceData, latestBlock, chainId])
 
   return chartData
 }

@@ -15,6 +15,7 @@ import { withRouter } from 'react-router-dom'
 import { OVERVIEW_TOKEN_BLACKLIST } from '../../constants'
 import FormattedName from '../FormattedName'
 import { TYPE } from '../../Theme'
+import { useChainId } from '../../contexts/Application'
 
 dayjs.extend(utc)
 
@@ -122,6 +123,8 @@ const SORT_FIELD = {
 
 // @TODO rework into virtualized list
 function TopTokenList({ tokens, itemMax = 10 }) {
+  const { chainId } = useChainId()
+
   // page state
   const [page, setPage] = useState(1)
   const [maxPage, setMaxPage] = useState(1)
@@ -144,11 +147,11 @@ function TopTokenList({ tokens, itemMax = 10 }) {
       tokens &&
       Object.keys(tokens)
         .filter((key) => {
-          return !OVERVIEW_TOKEN_BLACKLIST.includes(key)
+          return !OVERVIEW_TOKEN_BLACKLIST[chainId].includes(key)
         })
         .map((key) => tokens[key])
     )
-  }, [tokens])
+  }, [tokens, chainId])
 
   useEffect(() => {
     if (tokens && formattedTokens) {

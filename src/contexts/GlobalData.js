@@ -8,6 +8,7 @@ import { GLOBAL_DATA, GLOBAL_TXNS, GLOBAL_CHART, ALL_PAIRS, ALL_TOKENS, TOP_LPS_
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import { useAllPairData } from './PairData'
 import CoinGecko from 'coingecko-api'
+import { useChainId } from './Application'
 const UPDATE = 'UPDATE'
 const UPDATE_TXNS = 'UPDATE_TXNS'
 const UPDATE_CHART = 'UPDATE_CHART'
@@ -190,7 +191,7 @@ export default function Provider({ children }) {
  * @param {*} avaxPrice
  * @param {*} oldAvaxPrice
  */
-async function getGlobalData(avaxPrice, oldAvaxPrice) {
+async function getGlobalData(avaxPrice, oldAvaxPrice, chainId) {
   // data for each day, historic data used for % changes
   let data = {}
   let oneDayData = {}
@@ -205,56 +206,74 @@ async function getGlobalData(avaxPrice, oldAvaxPrice) {
     const utcTwoWeeksBack = utcCurrentTime.subtract(2, 'week').unix()
 
     // get the blocks needed for time travel queries
-    let [oneDayBlock, twoDayBlock, oneWeekBlock, twoWeekBlock] = await getBlocksFromTimestamps([
-      utcOneDayBack,
-      utcTwoDaysBack,
-      utcOneWeekBack,
-      utcTwoWeeksBack
-    ])
-
-    console.log('oneWeekBlock:', oneWeekBlock)
+    let [oneDayBlock, twoDayBlock, oneWeekBlock, twoWeekBlock] = await getBlocksFromTimestamps(
+      [utcOneDayBack, utcTwoDaysBack, utcOneWeekBack, utcTwoWeeksBack],
+      chainId
+    )
 
     // fetch the global data
-    let result = await client.query({
-      query: GLOBAL_DATA(),
+    let result = await client(chainId).query({
+      query: GLOBAL_DATA({ chainId: chainId }),
       fetchPolicy: 'cache-first'
     })
     data = result.data.polarfoxFactories[0]
 
     // fetch the historical data
-    let oneDayResult = await client.query({
-      query: GLOBAL_DATA(oneDayBlock?.number),
+    let oneDayResult = await client(chainId).query({
+      query: GLOBAL_DATA({ block: oneDayBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     oneDayData = oneDayResult.data.polarfoxFactories[0]
 
-    let twoDayResult = await client.query({
-      query: GLOBAL_DATA(twoDayBlock?.number),
+    let twoDayResult = await client(chainId).query({
+      query: GLOBAL_DATA({ block: twoDayBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     twoDayData = twoDayResult.data.polarfoxFactories[0]
 
-    let oneWeekResult = await client.query({
-      query: GLOBAL_DATA(oneWeekBlock?.number),
+    let oneWeekResult = await client(chainId).query({
+      query: GLOBAL_DATA({ block: oneWeekBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     const oneWeekData = oneWeekResult.data.polarfoxFactories[0]
 
-    let twoWeekResult = await client.query({
-      query: GLOBAL_DATA(twoWeekBlock?.number),
+    let twoWeekResult = await client(chainId).query({
+      query: GLOBAL_DATA({ block: twoWeekBlock?.number, chainId }),
       fetchPolicy: 'cache-first'
     })
     const twoWeekData = twoWeekResult.data.polarfoxFactories[0]
-
-    console.log('oneWeekResult:', oneWeekResult)
-
-    console.log('oneWeekData:', oneWeekData)
 
     if (data) {
       //if (data && oneDayData && twoDayData && twoWeekData) {
 
       // format the total liquidity in USD
       data.totalLiquidityUSD = data.totalLiquidityAVAX * avaxPrice
+      data.totalVolumeUSD = data.totalVolumeAVAX * avaxPrice
+      data.untrackedVolumeUSD = data.untrackedVolumeAVAX * avaxPrice
+
+      if (oneDayData) {
+        oneDayData.totalLiquidityUSD = oneDayData.totalLiquidityAVAX * avaxPrice
+        oneDayData.totalVolumeUSD = oneDayData.totalVolumeAVAX * avaxPrice
+        oneDayData.untrackedVolumeUSD = oneDayData.untrackedVolumeAVAX * avaxPrice
+      }
+
+      if (twoDayData) {
+        twoDayData.totalLiquidityUSD = twoDayData.totalLiquidityAVAX * avaxPrice
+        twoDayData.totalVolumeUSD = twoDayData.totalVolumeAVAX * avaxPrice
+        twoDayData.untrackedVolumeUSD = twoDayData.untrackedVolumeAVAX * avaxPrice
+      }
+
+      if (oneWeekData) {
+        oneWeekData.totalLiquidityUSD = oneWeekData.totalLiquidityAVAX * avaxPrice
+        oneWeekData.totalVolumeUSD = oneWeekData.totalVolumeAVAX * avaxPrice
+        oneWeekData.untrackedVolumeUSD = oneWeekData.untrackedVolumeAVAX * avaxPrice
+      }
+
+      if (twoWeekData) {
+        twoWeekData.totalLiquidityUSD = twoWeekData.totalLiquidityAVAX * avaxPrice
+        twoWeekData.totalVolumeUSD = twoWeekData.totalVolumeAVAX * avaxPrice
+        twoWeekData.untrackedVolumeUSD = twoWeekData.untrackedVolumeAVAX * avaxPrice
+      }
 
       if (oneDayData && twoDayData) {
         let [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
@@ -283,7 +302,7 @@ async function getGlobalData(avaxPrice, oldAvaxPrice) {
         data.liquidityChangeUSD = liquidityChangeUSD
 
         // add relevant fields with the calculated amounts
-        data.oneDayVolumeUSD = oneDayVolumeUSD * avaxPrice
+        data.oneDayVolumeUSD = oneDayVolumeUSD
         data.volumeChangeUSD = volumeChangeUSD
         data.oneDayTxns = oneDayTxns
         data.txnChange = txnChange
@@ -301,7 +320,7 @@ async function getGlobalData(avaxPrice, oldAvaxPrice) {
  * on main page
  * @param {*} oldestDateToFetch // start of window to fetch from
  */
-const getChartData = async (oldestDateToFetch, avaxPrice) => {
+const getChartData = async (oldestDateToFetch, avaxPrice, chainId) => {
   let data = []
   let weeklyData = []
   const utcEndTime = dayjs.utc()
@@ -310,7 +329,7 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
 
   try {
     while (!allFound) {
-      let result = await client.query({
+      let result = await client(chainId).query({
         query: GLOBAL_CHART,
         variables: {
           startTime: oldestDateToFetch,
@@ -335,11 +354,17 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
         // add the day index to the set of days
         dayIndexSet.add((data[i].date / oneDay).toFixed(0))
         dayIndexArray.push(data[i])
-        dayData.dailyVolumeUSD = parseFloat(dayData.dailyVolumeUSD)
+        dayData.dailyVolumeAVAX = parseFloat(dayData.dailyVolumeAVAX)
+        dayData.dailyVolumeUSD = dayData.dailyVolumeAVAX * avaxPrice
+        dayData.totalVolumeAVAX = parseFloat(dayData.totalVolumeAVAX)
+        dayData.totalVolumeUSD = dayData.totalVolumeAVAX * avaxPrice
+        dayData.totalLiquidityAVAX = parseFloat(dayData.totalLiquidityAVAX)
+        dayData.totalLiquidityUSD = dayData.totalLiquidityAVAX * avaxPrice
       })
 
       // fill in empty days ( there will be no day datas if no trades made that day )
       let timestamp = data[0].date ? data[0].date : oldestDateToFetch
+      let latestLiquidityAVAX = data[0].totalLiquidityAVAX
       let latestLiquidityUSD = data[0].totalLiquidityAVAX * avaxPrice
       let latestDayDats = data[0].mostLiquidTokens
       let index = 1
@@ -349,7 +374,9 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
         if (!dayIndexSet.has(currentDayIndex)) {
           data.push({
             date: nextDay,
+            dailyVolumeAVAX: 0,
             dailyVolumeUSD: 0,
+            totalLiquidityAVAX: latestLiquidityAVAX,
             totalLiquidityUSD: latestLiquidityUSD,
             mostLiquidTokens: latestDayDats
           })
@@ -374,6 +401,7 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
       }
       weeklyData[startIndexWeekly] = weeklyData[startIndexWeekly] || {}
       weeklyData[startIndexWeekly].date = data[i].date
+      weeklyData[startIndexWeekly].weeklyVolumeAVAX = (weeklyData[startIndexWeekly].weeklyVolumeAVAX ?? 0) + data[i].dailyVolumeAVAX
       weeklyData[startIndexWeekly].weeklyVolumeUSD = (weeklyData[startIndexWeekly].weeklyVolumeUSD ?? 0) + data[i].dailyVolumeUSD
     })
   } catch (e) {
@@ -385,13 +413,13 @@ const getChartData = async (oldestDateToFetch, avaxPrice) => {
 /**
  * Get and format transactions for global page
  */
-const getGlobalTransactions = async () => {
+const getGlobalTransactions = async (chainId) => {
   let transactions = {}
 
   try {
     let avaxPrice = await getCurrentAvaxPrice()
 
-    let result = await client.query({
+    let result = await client(chainId).query({
       query: GLOBAL_TXNS,
       fetchPolicy: 'cache-first'
     })
@@ -402,19 +430,19 @@ const getGlobalTransactions = async () => {
       result.data.transactions.map((transaction) => {
         if (transaction.mints.length > 0) {
           transaction.mints.map((mint) => {
-            mint.amountUSD = (parseFloat(mint.amountUSD) * avaxPrice).toString()
+            mint.amountUSD = (parseFloat(mint.amountAVAX) * avaxPrice).toString()
             return transactions.mints.push(mint)
           })
         }
         if (transaction.burns.length > 0) {
           transaction.burns.map((burn) => {
-            burn.amountUSD = (parseFloat(burn.amountUSD) * avaxPrice).toString()
+            burn.amountUSD = (parseFloat(burn.amountAVAX) * avaxPrice).toString()
             return transactions.burns.push(burn)
           })
         }
         if (transaction.swaps.length > 0) {
           transaction.swaps.map((swap) => {
-            swap.amountUSD = (parseFloat(swap.amountUSD) * avaxPrice).toString()
+            swap.amountUSD = (parseFloat(swap.amountAVAX) * avaxPrice).toString()
             return transactions.swaps.push(swap)
           })
         }
@@ -510,13 +538,13 @@ const TOKENS_TO_FETCH = 500
 /**
  * Loop through every pair on uniswap, used for search
  */
-async function getAllPairsOnUniswap() {
+async function getAllPairsOnUniswap(chainId) {
   try {
     let allFound = false
     let pairs = []
     let skipCount = 0
     while (!allFound) {
-      let result = await client.query({
+      let result = await client(chainId).query({
         query: ALL_PAIRS,
         variables: {
           skip: skipCount
@@ -538,13 +566,13 @@ async function getAllPairsOnUniswap() {
 /**
  * Loop through every token on uniswap, used for search
  */
-async function getAllTokensOnUniswap() {
+async function getAllTokensOnUniswap(chainId) {
   try {
     let allFound = false
     let skipCount = 0
     let tokens = []
     while (!allFound) {
-      let result = await client.query({
+      let result = await client(chainId).query({
         query: ALL_TOKENS,
         variables: {
           skip: skipCount
@@ -567,41 +595,33 @@ async function getAllTokensOnUniswap() {
  * Hook that fetches overview data, plus all tokens and pairs for search
  */
 export function useGlobalData() {
+  const { chainId } = useChainId()
   const [state, { update, updateAllPairsInUniswap, updateAllTokensInUniswap }] = useGlobalDataContext()
   const [avaxPrice, oldAvaxPrice] = useAvaxPrice()
 
   const data = state?.globalData
 
-  console.log('Data:', data)
-
   useEffect(() => {
     async function fetchData() {
-      console.log('Fetching data...')
-      let globalData = await getGlobalData(avaxPrice, oldAvaxPrice)
-      console.log('Passed getGlobalData')
-      console.log('Got the global data:', globalData)
+      let globalData = await getGlobalData(avaxPrice, oldAvaxPrice, chainId)
       globalData && update(globalData)
 
-      let allPairs = await getAllPairsOnUniswap()
-      console.log('Passed getAllPairsOnUniswap')
+      let allPairs = await getAllPairsOnUniswap(chainId)
       updateAllPairsInUniswap(allPairs)
 
-      let allTokens = await getAllTokensOnUniswap()
-      console.log('Passed getAllTokensOnUniswap')
+      let allTokens = await getAllTokensOnUniswap(chainId)
       updateAllTokensInUniswap(allTokens)
     }
-    console.log('AVAX price:', avaxPrice)
-    console.log('Old AVAX price:', oldAvaxPrice)
     if (!data && avaxPrice && oldAvaxPrice) {
-      console.log('Call to fetchData()')
       fetchData()
     }
-  }, [avaxPrice, oldAvaxPrice, update, data, updateAllPairsInUniswap, updateAllTokensInUniswap])
+  }, [avaxPrice, oldAvaxPrice, update, data, updateAllPairsInUniswap, updateAllTokensInUniswap, chainId])
 
   return data || {}
 }
 
 export function useGlobalChartData() {
+  const { chainId } = useChainId()
   const [state, { updateChart }] = useGlobalDataContext()
   const [oldestDateFetch, setOldestDateFetched] = useState()
   const [activeWindow] = useTimeframe()
@@ -631,33 +651,30 @@ export function useGlobalChartData() {
   useEffect(() => {
     async function fetchData() {
       // historical stuff for chart
-      let [newChartData, newWeeklyData] = await getChartData(oldestDateFetch, avaxPrice)
-      console.log('New chart data:', newChartData)
+      let [newChartData, newWeeklyData] = await getChartData(oldestDateFetch, avaxPrice, chainId)
       updateChart(newChartData, newWeeklyData)
     }
     if (oldestDateFetch && !(chartDataDaily && chartDataWeekly)) {
       fetchData()
     }
-  }, [chartDataDaily, chartDataWeekly, oldestDateFetch, updateChart, avaxPrice])
-
-  console.log('Chart data daily:', chartDataDaily)
-  console.log('Chart data weekly:', chartDataWeekly)
+  }, [chartDataDaily, chartDataWeekly, oldestDateFetch, updateChart, avaxPrice, chainId])
 
   return [chartDataDaily, chartDataWeekly]
 }
 
 export function useGlobalTransactions() {
+  const { chainId } = useChainId()
   const [state, { updateTransactions }] = useGlobalDataContext()
   const transactions = state?.transactions
   useEffect(() => {
     async function fetchData() {
       if (!transactions) {
-        let txns = await getGlobalTransactions()
+        let txns = await getGlobalTransactions(chainId)
         updateTransactions(txns)
       }
     }
     fetchData()
-  }, [updateTransactions, transactions])
+  }, [updateTransactions, transactions, chainId])
   return transactions
 }
 
@@ -693,10 +710,11 @@ export function useAllTokensInUniswap() {
 }
 
 /**
- * Get the top liquidity positions based on USD size
+ * Get the top liquidity positions based on AVAX size
  * @TODO Not a perfect lookup needs improvement
  */
 export function useTopLps() {
+  const { chainId } = useChainId()
   const [state, { updateTopLps }] = useGlobalDataContext()
   let topLps = state?.topLps
 
@@ -708,7 +726,7 @@ export function useTopLps() {
     async function fetchData() {
       // get top 20 by reserves
       let topPairs = Object.keys(allPairs)
-        ?.sort((a, b) => parseFloat(allPairs[a].reserveUSD > allPairs[b].reserveUSD ? -1 : 1))
+        ?.sort((a, b) => parseFloat(allPairs[a].reserveAVAX > allPairs[b].reserveAVAX ? -1 : 1))
         ?.slice(0, 99)
         .map((pair) => pair)
 
@@ -716,7 +734,7 @@ export function useTopLps() {
         topPairs.map(async (pair) => {
           // for each one, fetch top LPs
           try {
-            const { data: results } = await client.query({
+            const { data: results } = await client(chainId).query({
               query: TOP_LPS_PER_PAIRS,
               variables: {
                 pair: pair.toString()
@@ -738,7 +756,7 @@ export function useTopLps() {
           return list.map((entry) => {
             const pairData = allPairs[entry.pair.id]
             const usd =
-              (parseFloat(entry.liquidityTokenBalance) / parseFloat(pairData.totalSupply)) * parseFloat(pairData.reserveUSD) * avaxPrice
+              (parseFloat(entry.liquidityTokenBalance) / parseFloat(pairData.totalSupply)) * parseFloat(pairData.reserveAVAX) * avaxPrice
             if (usd) {
               return topLps.push({
                 user: entry.user,

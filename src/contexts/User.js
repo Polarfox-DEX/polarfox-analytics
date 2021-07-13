@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useReducer, useMemo, useCallback, useEffect, useState } from 'react'
-import { useAllPairData, usePairData } from './PairData'
-import { client, stakingClient } from '../apollo/client'
-import { USER_TRANSACTIONS, USER_POSITIONS, USER_HISTORY, PAIR_DAY_DATA_BULK, MINING_POSITIONS } from '../apollo/queries'
-import { useTimeframe, useStartTimestamp } from './Application'
+import { usePairData } from './PairData'
+import { client } from '../apollo/client'
+import { USER_TRANSACTIONS, USER_POSITIONS, USER_HISTORY, PAIR_DAY_DATA_BULK } from '../apollo/queries'
+import { useTimeframe, useStartTimestamp, useChainId } from './Application'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { useAvaxPrice, getAvaxPriceAtDate, getCurrentAvaxPrice } from './GlobalData'
@@ -153,12 +153,14 @@ export default function Provider({ children }) {
 }
 
 export function useUserTransactions(account) {
+  const { chainId } = useChainId()
+
   const [state, { updateTransactions }] = useUserContext()
   const transactions = state?.[account]?.[TRANSACTIONS_KEY]
   useEffect(() => {
     async function fetchData(account) {
       try {
-        let result = await client.query({
+        let result = await client(chainId).query({
           query: USER_TRANSACTIONS,
           variables: {
             user: account
@@ -175,20 +177,20 @@ export function useUserTransactions(account) {
     if (!transactions && account) {
       fetchData(account)
     }
-  }, [account, transactions, updateTransactions])
+  }, [account, transactions, updateTransactions, chainId])
 
   let [avaxPrice] = useAvaxPrice()
 
   if (transactions) {
     let txCopy = _.cloneDeep(transactions)
     for (let i = 0; i < txCopy.mints.length; i++) {
-      txCopy.mints[i].amountUSD = (parseFloat(txCopy.mints[i].amountUSD) * avaxPrice).toString()
+      txCopy.mints[i].amountUSD = (parseFloat(txCopy.mints[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < txCopy.burns.length; i++) {
-      txCopy.burns[i].amountUSD = (parseFloat(txCopy.burns[i].amountUSD) * avaxPrice).toString()
+      txCopy.burns[i].amountUSD = (parseFloat(txCopy.burns[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < txCopy.swaps.length; i++) {
-      txCopy.swaps[i].amountUSD = (parseFloat(txCopy.swaps[i].amountUSD) * avaxPrice).toString()
+      txCopy.swaps[i].amountUSD = (parseFloat(txCopy.swaps[i].amountAVAX) * avaxPrice).toString()
     }
     //txCopy.converted = true
     return txCopy
@@ -203,6 +205,8 @@ export function useUserTransactions(account) {
  * @param {*} account
  */
 export function useUserSnapshots(account) {
+  const { chainId } = useChainId()
+
   const [state, { updateUserSnapshots }] = useUserContext()
   const snapshots = state?.[account]?.[USER_SNAPSHOTS]
 
@@ -213,7 +217,7 @@ export function useUserSnapshots(account) {
         let allResults = []
         let found = false
         while (!found) {
-          let result = await client.query({
+          let result = await client(chainId).query({
             query: USER_HISTORY,
             variables: {
               skip: skip,
@@ -238,7 +242,7 @@ export function useUserSnapshots(account) {
     if (!snapshots && account) {
       fetchData()
     }
-  }, [account, snapshots, updateUserSnapshots])
+  }, [account, snapshots, updateUserSnapshots, chainId])
 
   return snapshots
 }
@@ -250,6 +254,8 @@ export function useUserSnapshots(account) {
  * @param {*} account
  */
 export function useUserPositionChart(position, account) {
+  const { chainId } = useChainId()
+
   const pairAddress = position?.pair?.id
   const [state, { updateUserPairReturns }] = useUserContext()
 
@@ -269,23 +275,12 @@ export function useUserPositionChart(position, account) {
   const currentPairData = usePairData(pairAddress)
   const [currentAVAXPrice] = useAvaxPrice()
 
-  // formatetd array to return for chart data
+  // formatted array to return for chart data
   const formattedHistory = state?.[account]?.[USER_PAIR_RETURNS_KEY]?.[pairAddress]
 
   useEffect(() => {
     async function fetchData() {
-      let fetchedData = await getHistoricalPairReturns(startDateTimestamp, currentPairData, pairSnapshots, currentAVAXPrice)
-      if (fetchedData) {
-        for (let j = 0; j < fetchedData.length; j++) {
-          let latestAvaxPrice
-          if (j === fetchedData.length - 1) {
-            latestAvaxPrice = await getCurrentAvaxPrice()
-          } else {
-            latestAvaxPrice = await getAvaxPriceAtDate(fetchedData[j].date)
-          }
-          fetchedData[j].usdValue = fetchedData[j].usdValue * latestAvaxPrice
-        }
-      }
+      let fetchedData = await getHistoricalPairReturns(startDateTimestamp, currentPairData, pairSnapshots, currentAVAXPrice, chainId)
       updateUserPairReturns(account, pairAddress, fetchedData)
     }
     if (
@@ -309,7 +304,8 @@ export function useUserPositionChart(position, account) {
     currentPairData,
     currentAVAXPrice,
     updateUserPairReturns,
-    position.pair.id
+    position.pair.id,
+    chainId
   ])
 
   return formattedHistory
@@ -321,6 +317,8 @@ export function useUserPositionChart(position, account) {
  * and usd liquidity value.
  */
 export function useUserLiquidityChart(account) {
+  const { chainId } = useChainId()
+
   const history = useUserSnapshots(account)
   // formatetd array to return for chart data
   const [formattedHistory, setFormattedHistory] = useState()
@@ -378,7 +376,7 @@ export function useUserLiquidityChart(account) {
       // get all day datas where date is in this list, and pair is in pair list
       let {
         data: { pairDayDatas }
-      } = await client.query({
+      } = await client(chainId).query({
         query: PAIR_DAY_DATA_BULK(pairs, startDateTimestamp)
       })
 
@@ -412,7 +410,7 @@ export function useUserLiquidityChart(account) {
           }
         }
 
-        const relavantDayDatas = Object.keys(ownershipPerPair).map((pairAddress) => {
+        const relevantDayDatas = Object.keys(ownershipPerPair).map((pairAddress) => {
           // find last day data after timestamp update
           const dayDatasForThisPair = pairDayDatas.filter((dayData) => {
             return dayData.pairAddress === pairAddress
@@ -429,18 +427,19 @@ export function useUserLiquidityChart(account) {
         })
 
         // now cycle through pair day datas, for each one find usd value = ownership[address] * reserveUSD
-        const dailyUSD = relavantDayDatas.reduce((totalUSD, dayData) => {
-          return (totalUSD =
-            totalUSD +
-            (ownershipPerPair[dayData.pairAddress]
+        const dailyAVAX = relevantDayDatas.reduce((totalAVAX, dayData) => {
+          return (totalAVAX =
+            totalAVAX +
+            // eslint-disable-next-line eqeqeq
+            (ownershipPerPair[dayData.pairAddress] && dayData.totalSupply != 0
               ? (parseFloat(ownershipPerPair[dayData.pairAddress].lpTokenBalance) / parseFloat(dayData.totalSupply)) *
-                parseFloat(dayData.reserveUSD)
+                parseFloat(dayData.reserveAVAX)
               : 0))
         }, 0)
 
         formattedHistory.push({
           date: dayTimestamp,
-          valueUSD: dailyUSD
+          valueAVAX: dailyAVAX
         })
       }
 
@@ -452,7 +451,7 @@ export function useUserLiquidityChart(account) {
           } else {
             latestAvaxPrice = await getAvaxPriceAtDate(formattedHistory[j].date)
           }
-          formattedHistory[j].valueUSD = formattedHistory[j].valueUSD * latestAvaxPrice
+          formattedHistory[j].valueUSD = formattedHistory[j].valueAVAX * latestAvaxPrice
         }
       }
 
@@ -461,12 +460,13 @@ export function useUserLiquidityChart(account) {
     if (history && startDateTimestamp && history.length > 0) {
       fetchData()
     }
-  }, [history, startDateTimestamp])
+  }, [history, startDateTimestamp, chainId])
 
   return formattedHistory
 }
 
 export function useUserPositions(account) {
+  const { chainId } = useChainId()
   const [state, { updatePositions }] = useUserContext()
   const positions = state?.[account]?.[POSITIONS_KEY]
 
@@ -476,7 +476,7 @@ export function useUserPositions(account) {
   useEffect(() => {
     async function fetchData(account) {
       try {
-        let result = await client.query({
+        let result = await client(chainId).query({
           query: USER_POSITIONS,
           variables: {
             user: account
@@ -486,7 +486,11 @@ export function useUserPositions(account) {
         if (result?.data?.liquidityPositions) {
           let formattedPositions = await Promise.all(
             result?.data?.liquidityPositions.map(async (positionData) => {
-              const returnData = await getLPReturnsOnPair(account, positionData.pair, avaxPrice, snapshots)
+              if (positionData.pair) {
+                // Set USD price
+                positionData.pair.reserveUSD = positionData.pair.reserveAVAX * avaxPrice ?? 0
+              }
+              const returnData = await getLPReturnsOnPair(account, positionData.pair, avaxPrice, snapshots, chainId)
               return {
                 ...positionData,
                 ...returnData
@@ -502,43 +506,43 @@ export function useUserPositions(account) {
     if (!positions && account && avaxPrice && snapshots) {
       fetchData(account)
     }
-  }, [account, positions, updatePositions, avaxPrice, snapshots])
+  }, [account, positions, updatePositions, avaxPrice, snapshots, chainId])
 
   return positions
 }
 
-export function useMiningPositions(account) {
-  const [state, { updateMiningPositions }] = useUserContext()
-  const allPairData = useAllPairData()
-  const miningPositions = state?.[account]?.[MINING_POSITIONS_KEY]
+// export function useMiningPositions(account) {
+//   const [state, { updateMiningPositions }] = useUserContext()
+//   const allPairData = useAllPairData()
+//   const miningPositions = state?.[account]?.[MINING_POSITIONS_KEY]
 
-  const snapshots = useUserSnapshots(account)
+//   const snapshots = useUserSnapshots(account)
 
-  useEffect(() => {
-    async function fetchData(account) {
-      try {
-        let miningPositionData = []
-        let result = await stakingClient.query({
-          query: MINING_POSITIONS(account),
-          fetchPolicy: 'no-cache'
-        })
-        if (!result?.data?.user?.miningPosition) {
-          return
-        }
-        miningPositionData = result.data.user.miningPosition
-        for (const miningPosition of miningPositionData) {
-          const pairAddress = miningPosition.miningPool.pair.id
-          miningPosition.pairData = allPairData[pairAddress]
-        }
-        updateMiningPositions(account, miningPositionData)
-      } catch (e) {
-        console.log(e)
-      }
-    }
+//   useEffect(() => {
+//     async function fetchData(account) {
+//       try {
+//         let miningPositionData = []
+//         let result = await stakingClient.query({
+//           query: MINING_POSITIONS(account),
+//           fetchPolicy: 'no-cache'
+//         })
+//         if (!result?.data?.user?.miningPosition) {
+//           return
+//         }
+//         miningPositionData = result.data.user.miningPosition
+//         for (const miningPosition of miningPositionData) {
+//           const pairAddress = miningPosition.miningPool.pair.id
+//           miningPosition.pairData = allPairData[pairAddress]
+//         }
+//         updateMiningPositions(account, miningPositionData)
+//       } catch (e) {
+//         console.log(e)
+//       }
+//     }
 
-    if (!miningPositions && account && snapshots) {
-      fetchData(account)
-    }
-  }, [account, miningPositions, updateMiningPositions, snapshots, allPairData])
-  return miningPositions
-}
+//     if (!miningPositions && account && snapshots) {
+//       fetchData(account)
+//     }
+//   }, [account, miningPositions, updateMiningPositions, snapshots, allPairData])
+//   return miningPositions
+// }

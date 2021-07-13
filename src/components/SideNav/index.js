@@ -12,6 +12,7 @@ import Link from '../Link'
 import { useSessionStart } from '../../contexts/Application'
 import { useDarkModeManager } from '../../contexts/LocalStorage'
 import Toggle from '../Toggle'
+import { DEX } from '../../constants'
 
 const Wrapper = styled.div`
   height: ${({ isMobile }) => (isMobile ? 'initial' : '100vh')};
@@ -161,7 +162,7 @@ function SideNav({ history }) {
           </AutoColumn>
           <AutoColumn gap="0.5rem" style={{ marginLeft: '.75rem', marginBottom: '4rem' }}>
             <HeaderText>
-              <Link href="https://dex.polarfox.io" target="_blank">
+              <Link href={DEX} target="_blank">
                 Polarfox DEX
               </Link>
             </HeaderText>

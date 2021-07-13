@@ -9,6 +9,7 @@ import PairList from '../components/PairList'
 import TopTokenList from '../components/TokenList'
 import TxnList from '../components/TxnList'
 import GlobalChart from '../components/GlobalChart'
+import BlockchainSelector from '../components/BlockchainSelector'
 import Search from '../components/Search'
 import GlobalStats from '../components/GlobalStats'
 
@@ -70,6 +71,7 @@ function GlobalPage() {
         <div>
           <AutoColumn gap="24px" style={{ paddingBottom: below800 ? '0' : '24px' }}>
             <TYPE.largeHeader>{below800 ? 'DEX Analytics' : 'Polarfox DEX Analytics'}</TYPE.largeHeader>
+            <BlockchainSelector />
             <Search />
             <GlobalStats />
           </AutoColumn>

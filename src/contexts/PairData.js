@@ -28,6 +28,7 @@ import {
 import { timeframeOptions } from '../constants'
 import { useLatestBlocks } from './Application'
 import { updateNameData } from '../utils/data'
+import { useChainId } from '../contexts/Application'
 
 const UPDATE = 'UPDATE'
 const UPDATE_PAIR_TXNS = 'UPDATE_PAIR_TXNS'
@@ -180,14 +181,14 @@ export default function Provider({ children }) {
   )
 }
 
-async function getBulkPairData(pairList, avaxPrice) {
+async function getBulkPairData(pairList, avaxPrice, chainId) {
   const [t1, t2, tWeek] = getTimestampsForChanges()
-  let blocks = await getBlocksFromTimestamps([t1, t2, tWeek])
+  let blocks = await getBlocksFromTimestamps([t1, t2, tWeek], chainId)
   let b1, b2, bWeek
   if (blocks.length !== 3) {
-    b1 = await getMostRecentBlockSinceTimestamp(t1)
-    b2 = await getMostRecentBlockSinceTimestamp(t2)
-    bWeek = await getMostRecentBlockSinceTimestamp(tWeek)
+    b1 = await getMostRecentBlockSinceTimestamp(t1, chainId)
+    b2 = await getMostRecentBlockSinceTimestamp(t2, chainId)
+    bWeek = await getMostRecentBlockSinceTimestamp(tWeek, chainId)
   } else {
     b1 = blocks[0].number
     b2 = blocks[1].number
@@ -195,7 +196,7 @@ async function getBulkPairData(pairList, avaxPrice) {
   }
 
   try {
-    let current = await client.query({
+    let current = await client(chainId).query({
       query: PAIRS_BULK,
       variables: {
         allPairs: pairList
@@ -205,7 +206,7 @@ async function getBulkPairData(pairList, avaxPrice) {
 
     let [oneDayResult, twoDayResult, oneWeekResult] = await Promise.all(
       [b1, b2, bWeek].map(async (block) => {
-        let result = client.query({
+        let result = client(chainId).query({
           query: PAIRS_HISTORICAL_BULK(block, pairList),
           fetchPolicy: 'cache-first'
         })
@@ -231,7 +232,7 @@ async function getBulkPairData(pairList, avaxPrice) {
           let data = pair
           let oneDayHistory = oneDayData?.[pair.id]
           if (!oneDayHistory) {
-            let newData = await client.query({
+            let newData = await client(chainId).query({
               query: PAIR_DATA(pair.id, b1),
               fetchPolicy: 'cache-first'
             })
@@ -239,7 +240,7 @@ async function getBulkPairData(pairList, avaxPrice) {
           }
           let twoDayHistory = twoDayData?.[pair.id]
           if (!twoDayHistory) {
-            let newData = await client.query({
+            let newData = await client(chainId).query({
               query: PAIR_DATA(pair.id, b2),
               fetchPolicy: 'cache-first'
             })
@@ -247,7 +248,7 @@ async function getBulkPairData(pairList, avaxPrice) {
           }
           let oneWeekHistory = oneWeekData?.[pair.id]
           if (!oneWeekHistory) {
-            let newData = await client.query({
+            let newData = await client(chainId).query({
               query: PAIR_DATA(pair.id, bWeek),
               fetchPolicy: 'cache-first'
             })
@@ -266,16 +267,16 @@ async function getBulkPairData(pairList, avaxPrice) {
 function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayBlock) {
   // get volume changes
   const [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
-    data?.volumeUSD * avaxPrice,
-    oneDayData?.volumeUSD ? oneDayData.volumeUSD * avaxPrice : 0,
-    twoDayData?.volumeUSD ? twoDayData.volumeUSD * avaxPrice : 0
+    data?.volumeAVAX ? data.volumeAVAX * avaxPrice : 0,
+    oneDayData?.volumeAVAX ? oneDayData.volumeAVAX * avaxPrice : 0,
+    twoDayData?.volumeAVAX ? twoDayData.volumeAVAX * avaxPrice : 0
   )
   const [oneDayVolumeUntracked, volumeChangeUntracked] = get2DayPercentChange(
-    data?.untrackedVolumeUSD * avaxPrice,
-    oneDayData?.untrackedVolumeUSD ? parseFloat(oneDayData?.untrackedVolumeUSD) * avaxPrice : 0,
-    twoDayData?.untrackedVolumeUSD ? twoDayData?.untrackedVolumeUSD * avaxPrice : 0
+    data?.untrackedVolumeAVAX ? data.untrackedVolumeAVAX * avaxPrice : 0,
+    oneDayData?.untrackedVolumeAVAX ? oneDayData.untrackedVolumeAVAX * avaxPrice : 0,
+    twoDayData?.untrackedVolumeAVAX ? twoDayData.untrackedVolumeAVAX * avaxPrice : 0
   )
-  const oneWeekVolumeUSD = parseFloat(oneWeekData ? (data?.volumeUSD - oneWeekData?.volumeUSD) * avaxPrice : data.volumeUSD * avaxPrice)
+  const oneWeekVolumeUSD = parseFloat(oneWeekData ? (data?.volumeAVAX - oneWeekData?.volumeAVAX) * avaxPrice : data.volumeAVAX * avaxPrice)
 
   // set volume properties
   data.oneDayVolumeUSD = parseFloat(oneDayVolumeUSD)
@@ -284,19 +285,22 @@ function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayB
   data.oneDayVolumeUntracked = oneDayVolumeUntracked
   data.volumeChangeUntracked = volumeChangeUntracked
 
-  // set liquiditry properties
-  data.trackedReserveUSD = data.trackedReserveAVAX * avaxPrice
-  data.liquidityChangeUSD = getPercentChange(data.reserveUSD * avaxPrice, oneDayData?.reserveUSD * avaxPrice)
+  // Recalculate reserveUSD using AVAX's real price
+  data.reserveUSD = data.reserveAVAX * avaxPrice
 
-  // format if pair hasnt existed for a day or a week
+  // set liquidity properties
+  data.trackedReserveUSD = data.trackedReserveAVAX * avaxPrice
+  data.liquidityChangeUSD = getPercentChange(data.reserveAVAX * avaxPrice, oneDayData?.reserveAVAX * avaxPrice)
+
+  // Format if pair has not existed for a day or a week
   if (!oneDayData && data && data.createdAtBlockNumber > oneDayBlock) {
-    data.oneDayVolumeUSD = parseFloat(data.volumeUSD)
+    data.oneDayVolumeUSD = parseFloat(data.volumeAVAX) * avaxPrice
   }
   if (!oneDayData && data) {
-    data.oneDayVolumeUSD = parseFloat(data.volumeUSD)
+    data.oneDayVolumeUSD = parseFloat(data.volumeAVAX) * avaxPrice
   }
   if (!oneWeekData && data) {
-    data.oneWeekVolumeUSD = parseFloat(data.volumeUSD)
+    data.oneWeekVolumeUSD = parseFloat(data.volumeAVAX) * avaxPrice
   }
 
   // format incorrect names
@@ -305,11 +309,11 @@ function parseData(data, oneDayData, twoDayData, oneWeekData, avaxPrice, oneDayB
   return data
 }
 
-const getPairTransactions = async (pairAddress) => {
+const getPairTransactions = async (pairAddress, chainId) => {
   const transactions = {}
 
   try {
-    let result = await client.query({
+    let result = await client(chainId).query({
       query: FILTERED_TRANSACTIONS,
       variables: {
         allPairs: [pairAddress]
@@ -323,13 +327,13 @@ const getPairTransactions = async (pairAddress) => {
     let avaxPrice = await getCurrentAvaxPrice()
 
     for (let i = 0; i < transactions.mints.length; i++) {
-      transactions.mints[i].amountUSD = (parseFloat(transactions.mints[i].amountUSD) * avaxPrice).toString()
+      transactions.mints[i].amountUSD = (parseFloat(transactions.mints[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < transactions.burns.length; i++) {
-      transactions.burns[i].amountUSD = (parseFloat(transactions.burns[i].amountUSD) * avaxPrice).toString()
+      transactions.burns[i].amountUSD = (parseFloat(transactions.burns[i].amountAVAX) * avaxPrice).toString()
     }
     for (let i = 0; i < transactions.swaps.length; i++) {
-      transactions.swaps[i].amountUSD = (parseFloat(transactions.swaps[i].amountUSD) * avaxPrice).toString()
+      transactions.swaps[i].amountUSD = (parseFloat(transactions.swaps[i].amountAVAX) * avaxPrice).toString()
     }
   } catch (e) {
     console.log(e)
@@ -338,7 +342,7 @@ const getPairTransactions = async (pairAddress) => {
   return transactions
 }
 
-const getPairChartData = async (pairAddress) => {
+const getPairChartData = async (pairAddress, chainId) => {
   let data = []
   const utcEndTime = dayjs.utc()
   let utcStartTime = utcEndTime.subtract(1, 'year').startOf('minute')
@@ -348,7 +352,7 @@ const getPairChartData = async (pairAddress) => {
     let allFound = false
     let skip = 0
     while (!allFound) {
-      let result = await client.query({
+      let result = await client(chainId).query({
         query: PAIR_CHART,
         variables: {
           pairAddress: pairAddress,
@@ -365,19 +369,23 @@ const getPairChartData = async (pairAddress) => {
 
     let dayIndexSet = new Set()
     let dayIndexArray = []
+    let avaxPrice = await getCurrentAvaxPrice()
     const oneDay = 24 * 60 * 60
     data.forEach((dayData, i) => {
       // add the day index to the set of days
       dayIndexSet.add((data[i].date / oneDay).toFixed(0))
       dayIndexArray.push(data[i])
-      dayData.dailyVolumeUSD = parseFloat(dayData.dailyVolumeUSD)
-      dayData.reserveUSD = parseFloat(dayData.reserveUSD)
+      dayData.dailyVolumeAVAX = parseFloat(dayData.dailyVolumeAVAX)
+      dayData.dailyVolumeUSD = dayData.dailyVolumeAVAX * avaxPrice
+      dayData.reserveAVAX = parseFloat(dayData.reserveAVAX)
+      dayData.reserveUSD = dayData.reserveAVAX * avaxPrice
     })
 
     if (data[0]) {
       // fill in empty days
       let timestamp = data[0].date ? data[0].date : startTime
-      let latestLiquidityUSD = data[0].reserveUSD
+      let latestLiquidityAVAX = data[0].reserveAVAX
+      let latestLiquidityUSD = latestLiquidityAVAX * avaxPrice
       let index = 1
       while (timestamp < utcEndTime.unix() - oneDay) {
         const nextDay = timestamp + oneDay
@@ -386,11 +394,14 @@ const getPairChartData = async (pairAddress) => {
           data.push({
             date: nextDay,
             dayString: nextDay,
+            dailyVolumeAVAX: 0,
             dailyVolumeUSD: 0,
+            reserveAVAX: latestLiquidityAVAX,
             reserveUSD: latestLiquidityUSD
           })
         } else {
-          latestLiquidityUSD = dayIndexArray[index].reserveUSD
+          latestLiquidityAVAX = dayIndexArray[index].reserveAVAX
+          latestLiquidityUSD = latestLiquidityAVAX * avaxPrice
           index = index + 1
         }
         timestamp = nextDay
@@ -406,8 +417,8 @@ const getPairChartData = async (pairAddress) => {
       } else {
         latestAvaxPrice = await getAvaxPriceAtDate(data[j].date)
       }
-      data[j].dailyVolumeUSD = data[j].dailyVolumeUSD * latestAvaxPrice
-      data[j].reserveUSD = data[j].reserveUSD * latestAvaxPrice
+      data[j].dailyVolumeUSD = data[j].dailyVolumeAVAX * latestAvaxPrice
+      data[j].reserveUSD = data[j].reserveAVAX * latestAvaxPrice
     }
   } catch (e) {
     console.log(e)
@@ -416,7 +427,7 @@ const getPairChartData = async (pairAddress) => {
   return data
 }
 
-const getHourlyRateData = async (pairAddress, startTime, latestBlock) => {
+const getHourlyRateData = async (pairAddress, startTime, latestBlock, chainId) => {
   try {
     const utcEndTime = dayjs.utc()
     let time = startTime
@@ -436,7 +447,7 @@ const getHourlyRateData = async (pairAddress, startTime, latestBlock) => {
     // once you have all the timestamps, get the blocks for each timestamp in a bulk query
     let blocks
 
-    blocks = await getBlocksFromTimestamps(timestamps, 100)
+    blocks = await getBlocksFromTimestamps(timestamps, chainId, 100)
 
     // catch failing case
     if (!blocks || blocks?.length === 0) {
@@ -449,7 +460,7 @@ const getHourlyRateData = async (pairAddress, startTime, latestBlock) => {
       })
     }
 
-    const result = await splitQuery(HOURLY_PAIR_RATES, client, [pairAddress], blocks, 100)
+    const result = await splitQuery(HOURLY_PAIR_RATES, client(chainId), [pairAddress], blocks, 100)
 
     // format token AVAX price results
     let values = []
@@ -489,6 +500,8 @@ const getHourlyRateData = async (pairAddress, startTime, latestBlock) => {
 }
 
 export function Updater() {
+  const { chainId } = useChainId()
+
   const [, { updateTopPairs }] = usePairDataContext()
   const [avaxPrice] = useAvaxPrice()
   useEffect(() => {
@@ -496,7 +509,7 @@ export function Updater() {
       // get top pairs by reserves
       let {
         data: { pairs }
-      } = await client.query({
+      } = await client(chainId).query({
         query: PAIRS_CURRENT,
         fetchPolicy: 'cache-first'
       })
@@ -507,15 +520,16 @@ export function Updater() {
       })
 
       // get data for every pair in list
-      let topPairs = await getBulkPairData(formattedPairs, avaxPrice)
+      let topPairs = await getBulkPairData(formattedPairs, avaxPrice, chainId)
       topPairs && updateTopPairs(topPairs)
     }
     avaxPrice && getData()
-  }, [avaxPrice, updateTopPairs])
+  }, [avaxPrice, updateTopPairs, chainId])
   return null
 }
 
 export function useHourlyRateData(pairAddress, timeWindow) {
+  const { chainId } = useChainId()
   const [state, { updateHourlyData }] = usePairDataContext()
   const chartData = state?.[pairAddress]?.hourlyData?.[timeWindow]
   const [latestBlock] = useLatestBlocks()
@@ -526,13 +540,13 @@ export function useHourlyRateData(pairAddress, timeWindow) {
     const startTime = timeWindow === timeframeOptions.ALL_TIME ? 1589760000 : currentTime.subtract(1, windowSize).startOf('hour').unix()
 
     async function fetch() {
-      let data = await getHourlyRateData(pairAddress, startTime, latestBlock)
+      let data = await getHourlyRateData(pairAddress, startTime, latestBlock, chainId)
       updateHourlyData(pairAddress, data, timeWindow)
     }
     if (!chartData) {
       fetch()
     }
-  }, [chartData, timeWindow, pairAddress, updateHourlyData, latestBlock])
+  }, [chartData, timeWindow, pairAddress, updateHourlyData, latestBlock, chainId])
 
   return chartData
 }
@@ -542,6 +556,7 @@ export function useHourlyRateData(pairAddress, timeWindow) {
  * store these updates to reduce future redundant calls
  */
 export function useDataForList(pairList) {
+  const { chainId } = useChainId()
   const [state] = usePairDataContext()
   const [avaxPrice] = useAvaxPrice()
 
@@ -574,7 +589,8 @@ export function useDataForList(pairList) {
         unfetched.map((pair) => {
           return pair
         }),
-        avaxPrice
+        avaxPrice,
+        chainId
       )
       setFetched(newFetched.concat(newPairData))
     }
@@ -582,7 +598,7 @@ export function useDataForList(pairList) {
       setStale(true)
       fetchNewPairData()
     }
-  }, [avaxPrice, state, pairList, stale, fetched])
+  }, [avaxPrice, state, pairList, stale, fetched, chainId])
 
   let formattedFetch =
     fetched &&
@@ -620,33 +636,35 @@ export function usePairData(pairAddress) {
  * Get most recent txns for a pair
  */
 export function usePairTransactions(pairAddress) {
+  const { chainId } = useChainId()
   const [state, { updatePairTxns }] = usePairDataContext()
   const pairTxns = state?.[pairAddress]?.txns
   useEffect(() => {
     async function checkForTxns() {
       if (!pairTxns) {
-        let transactions = await getPairTransactions(pairAddress)
+        let transactions = await getPairTransactions(pairAddress, chainId)
         updatePairTxns(pairAddress, transactions)
       }
     }
     checkForTxns()
-  }, [pairTxns, pairAddress, updatePairTxns])
+  }, [pairTxns, pairAddress, updatePairTxns, chainId])
   return pairTxns
 }
 
 export function usePairChartData(pairAddress) {
+  const { chainId } = useChainId()
   const [state, { updateChartData }] = usePairDataContext()
   const chartData = state?.[pairAddress]?.chartData
 
   useEffect(() => {
     async function checkForChartData() {
       if (!chartData) {
-        let data = await getPairChartData(pairAddress)
+        let data = await getPairChartData(pairAddress, chainId)
         updateChartData(pairAddress, data)
       }
     }
     checkForChartData()
-  }, [chartData, pairAddress, updateChartData])
+  }, [chartData, pairAddress, updateChartData, chainId])
   return chartData
 }
 

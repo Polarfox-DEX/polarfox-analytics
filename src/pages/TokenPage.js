@@ -30,6 +30,8 @@ import { Hover, PageWrapper, ContentWrapper, StyledIcon } from '../components'
 import { PlusCircle, Bookmark } from 'react-feather'
 import FormattedName from '../components/FormattedName'
 import { useListedTokens } from '../contexts/Application'
+import { DEFAULT_DECIMALS, CUSTOM_DECIMALS_TOKENS, EXPLORER } from '../constants'
+import { useChainId } from '../contexts/Application'
 
 const DashboardWrapper = styled.div`
   width: 100%;
@@ -89,6 +91,8 @@ const WarningGrouping = styled.div`
 `
 
 function TokenPage({ address, history }) {
+  const { chainId } = useChainId()
+
   const {
     id,
     name,
@@ -102,7 +106,7 @@ function TokenPage({ address, history }) {
     priceChangeUSD,
     liquidityChangeUSD,
     oneDayTxns,
-    txnChange,
+    txnChange
   } = useTokenData(address)
 
   useEffect(() => {
@@ -110,7 +114,7 @@ function TokenPage({ address, history }) {
   }, [])
 
   // detect color from token
-  const backgroundColor = useColor(id, symbol)
+  const backgroundColor = useColor(id)
 
   const allPairs = useTokenPairs(address)
 
@@ -120,8 +124,11 @@ function TokenPage({ address, history }) {
   // all transactions with this token
   const transactions = useTokenTransactions(address)
 
+  // Number of decimals to display
+  const decimals = (CUSTOM_DECIMALS_TOKENS[chainId] && CUSTOM_DECIMALS_TOKENS[chainId][address]) ?? DEFAULT_DECIMALS
+
   // price
-  const price = priceUSD ? formattedNum(priceUSD, true) : ''
+  const price = priceUSD ? formattedNum(priceUSD, true, false, decimals) : ''
   const priceChange = priceChangeUSD ? formattedPercent(priceChangeUSD) : ''
 
   // volume
@@ -129,8 +136,8 @@ function TokenPage({ address, history }) {
     oneDayVolumeUSD || oneDayVolumeUSD === 0
       ? formattedNum(oneDayVolumeUSD === 0 ? oneDayVolumeUT : oneDayVolumeUSD, true)
       : oneDayVolumeUSD === 0
-        ? '$0'
-        : '-'
+      ? '$0'
+      : '-'
 
   // mark if using untracked volume
   const [usingUtVolume, setUsingUtVolume] = useState(false)
@@ -163,7 +170,7 @@ function TokenPage({ address, history }) {
   useEffect(() => {
     window.scrollTo({
       behavior: 'smooth',
-      top: 0,
+      top: 0
     })
   }, [])
 
@@ -184,12 +191,7 @@ function TokenPage({ address, history }) {
               <BasicLink to="/tokens">{'Tokens '}</BasicLink>→ {symbol}
               {'  '}
             </TYPE.body>
-            <Link
-              style={{ width: 'fit-content' }}
-              color={backgroundColor}
-              external
-              href={'https://cchain.explorer.avax.network/address/' + address}
-            >
+            <Link style={{ width: 'fit-content' }} color={backgroundColor} external href={`${EXPLORER[chainId]}/address/${address}`}>
               <Text style={{ marginLeft: '.15rem' }} fontSize={'14px'} fontWeight={400}>
                 ({address.slice(0, 8) + '...' + address.slice(36, 42)})
               </Text>
@@ -204,7 +206,7 @@ function TokenPage({ address, history }) {
               style={{
                 flexWrap: 'wrap',
                 marginBottom: '2rem',
-                alignItems: 'flex-start',
+                alignItems: 'flex-start'
               }}
             >
               <RowFixed style={{ flexWrap: 'wrap' }}>
@@ -239,12 +241,12 @@ function TokenPage({ address, history }) {
                       <Bookmark style={{ marginRight: '0.5rem', opacity: 0.4 }} />
                     </StyledIcon>
                   ) : (
-                        <></>
-                      )}
-                  <Link href={getPoolLink(address)} target="_blank">
+                    <></>
+                  )}
+                  <Link href={getPoolLink(chainId, address)} target="_blank">
                     <ButtonLight color={backgroundColor}>+ Add Liquidity</ButtonLight>
                   </Link>
-                  <Link href={getSwapLink(address)} target="_blank">
+                  <Link href={getSwapLink(chainId, address)} target="_blank">
                     <ButtonDark ml={'.5rem'} mr={below1080 && '.5rem'} color={backgroundColor}>
                       Trade
                     </ButtonDark>
@@ -318,7 +320,7 @@ function TokenPage({ address, history }) {
                 <Panel
                   style={{
                     gridColumn: below1080 ? '1' : '2/4',
-                    gridRow: below1080 ? '' : '1/4',
+                    gridRow: below1080 ? '' : '1/4'
                   }}
                 >
                   <TokenChart address={address} color={backgroundColor} base={priceUSD} />
@@ -335,21 +337,15 @@ function TokenPage({ address, history }) {
               rounded
               style={{
                 marginTop: '1.5rem',
-                padding: '1.125rem 0 ',
+                padding: '1.125rem 0 '
               }}
             >
-              {address && fetchedPairsList ? (
-                <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} />
-              ) : (
-                  <Loader />
-                )}
+              {address && fetchedPairsList ? <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} /> : <Loader />}
             </Panel>
             <RowBetween mt={40} mb={'1rem'}>
               <TYPE.main fontSize={'1.125rem'}>Transactions</TYPE.main> <div />
             </RowBetween>
-            <Panel rounded>
-              {transactions ? <TxnList color={backgroundColor} transactions={transactions} /> : <Loader />}
-            </Panel>
+            <Panel rounded>{transactions ? <TxnList color={backgroundColor} transactions={transactions} /> : <Loader />}</Panel>
             <>
               <RowBetween style={{ marginTop: '3rem' }}>
                 <TYPE.main fontSize={'1.125rem'}>Token Information</TYPE.main>{' '}
@@ -357,7 +353,7 @@ function TokenPage({ address, history }) {
               <Panel
                 rounded
                 style={{
-                  marginTop: '1.5rem',
+                  marginTop: '1.5rem'
                 }}
                 p={20}
               >
@@ -384,7 +380,7 @@ function TokenPage({ address, history }) {
                     </AutoRow>
                   </Column>
                   <ButtonLight color={backgroundColor}>
-                    <Link color={backgroundColor} external href={'https://cchain.explorer.avax.network/address/' + address}>
+                    <Link color={backgroundColor} external href={`${EXPLORER[chainId]}/address/${address}`}>
                       View on the C-Chain Explorer ↗
                     </Link>
                   </ButtonLight>
